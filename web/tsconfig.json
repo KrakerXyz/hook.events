@@ -1,0 +1,24 @@
+{
+   "compilerOptions": {
+      "target": "ES2019", //setting higher than 2019 throws an error during build
+      "module": "esnext",
+      "moduleResolution": "node",
+      "baseUrl": ".",
+      "allowSyntheticDefaultImports": true, //required for zen observables
+      "sourceMap": true,
+      "noEmitOnError": true,
+      "strict": true,
+      "noImplicitReturns": true,
+      "skipLibCheck": true,
+      "paths": {
+         "@/*": [
+            "src/*"
+         ]
+      },
+      "lib": [
+         "ES2019",
+         "dom",
+         "dom.iterable"
+      ]
+   }
+}

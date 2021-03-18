@@ -1,0 +1,5 @@
+{
+   "v-button-copy": {
+      "description": "Adds a copy to clipboard icon that when clicked, copies :text to the clipboard"
+   }
+}

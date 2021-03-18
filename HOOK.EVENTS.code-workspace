@@ -1,0 +1,55 @@
+{
+	"folders": [
+		{
+			"path": "web"
+		},
+		{
+			"path": "receiver"
+		},
+		{
+			"path": "client"
+		}
+	],
+	"settings": {
+		"vetur.format.scriptInitialIndent": true,
+		"vetur.format.styleInitialIndent": true,
+		"vetur.format.options.tabSize": 3,
+		"vetur.format.defaultFormatter.ts": "vscode-typescript",
+		"editor.wordWrap": "on",
+		"typescript.preferences.quoteStyle": "single",
+		"javascript.preferences.quoteStyle": "single",
+		"html.format.wrapLineLength": 0,
+		"editor.wrappingIndent": "indent",
+		"azureFunctions.showExtensionsCsprojWarning": false,
+		"files.watcherExclude": {
+			"**/dist/**": true,
+			"**/lib/**": true
+		},
+		"search.exclude": {
+			"**/dist/**": true
+		},
+		"vetur.validation.templateProps": true,
+		"vetur.format.defaultFormatter.html": "js-beautify-html",
+		"vetur.format.defaultFormatterOptions": {
+			"js-beautify-html": {
+				"wrap_attributes": "force-expand-multiline",
+				"indent_handlebars": true,
+				"indent_inner_html": true
+			}
+		},
+		"html.format.indentInnerHtml": true,
+		"html.format.indentHandlebars": true,
+		"html.format.wrapAttributes": "aligned-multiple",
+		"cSpell.allowCompoundWords": true,
+		"cSpell.ignorePaths": [
+			"**/package-lock.json",
+			"**/node_modules/**",
+			"**/vscode-extension/**",
+			"**/.git/objects/**",
+			".vscode",
+			"**/*.code-workspace"
+		],
+		"vetur.experimental.templateInterpolationService": true,
+		"editor.tabSize": 3,
+	}
+}
