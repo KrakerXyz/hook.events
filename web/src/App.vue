@@ -64,6 +64,7 @@
                });
 
                if (auth2.isSignedIn) {
+
                   console.log('Already signed in');
                   auth2.currentUser.listen(user => {
                      const profile = user.getBasicProfile();
