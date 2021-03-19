@@ -2,7 +2,7 @@
 <template>
    <div class="h-100 container-fluid">
       <div class="row mt-3">
-         <div class="col text-monospace">
+         <div class="col font-monospace">
             <h1>
                <method-badge :method="event.method"></method-badge> {{event.path}}{{queryString}}
             </h1>

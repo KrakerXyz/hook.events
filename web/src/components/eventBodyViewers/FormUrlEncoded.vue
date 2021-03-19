@@ -3,7 +3,7 @@
    <div>
       <teleport to="#event-view-body-header-portal">
          <div
-            class="btn-group ml-3"
+            class="btn-group ms-3"
             role="group"
          >
             <button

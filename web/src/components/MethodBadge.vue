@@ -16,10 +16,10 @@
             return {
                'badge': true,
                'border': true,
-               'badge-success': props.method === 'GET',
-               'badge-primary': props.method === 'POST',
-               'badge-warn': props.method === 'PUT',
-               'badge-danger': props.method === 'DELETE'
+               'bg-success': props.method === 'GET',
+               'bg-primary': props.method === 'POST',
+               'bg-warn': props.method === 'PUT',
+               'bg-danger': props.method === 'DELETE'
             };
          });
          return { badgeClass };

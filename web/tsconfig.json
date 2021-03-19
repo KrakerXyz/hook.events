@@ -15,6 +15,10 @@
             "src/*"
          ]
       },
+      "types": [
+         "google-one-tap",
+         "node"
+      ],
       "lib": [
          "ES2019",
          "dom",

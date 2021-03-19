@@ -5,10 +5,10 @@
       <teleport to="#nav-portal">
          <!-- this rapper div is to keep the items together within nav's justify spacing -->
          <div class="d-flex align-items-center">
-            <span class="navbar-text text-monospace text-light d-none d-lg-inline">
+            <span class="navbar-text font-monospace text-light d-none d-lg-inline">
                {{hookAddress}}
             </span>
-            <span class="navbar-text text-monospace text-light d-lg-none">
+            <span class="navbar-text font-monospace text-light d-lg-none">
                {{hookId}}
             </span>
             <v-button-copy
@@ -55,7 +55,7 @@
                class="col-8 h-100"
             >
                <div class="h-100 d-flex flex-column">
-                  <h5 class="ml-5">Event Details</h5>
+                  <h5 class="ms-5">Event Details</h5>
                   <event-view
                      class="flex-grow-1 overflow-auto px-5"
                      :event="selectedEvent"

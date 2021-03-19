@@ -7,7 +7,7 @@
       <i class="fal fa-trash-alt"></i>
       <span
          v-if="!!this.$slots.default"
-         class="ml-3"
+         class="ms-3"
       >
          <slot></slot>
       </span>

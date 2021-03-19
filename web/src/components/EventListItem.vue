@@ -4,7 +4,7 @@
       <div class="row">
          <div class="col">
             <method-badge :method="event.event.method"></method-badge>
-            <span class="ml-3 text-monospace font-weight-bold">{{event.event.path}}</span>
+            <span class="ms-3 font-monospace font-weight-bold">{{event.event.path}}</span>
          </div>
          <div class="col-auto">
             <v-button-delete @click.prevent="deleteItem"></v-button-delete>

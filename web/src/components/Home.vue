@@ -34,7 +34,7 @@
                   class="list-group-item list-group-item-action"
                >
                   {{h.id}}
-                  <small class="text-muted ml-5">{{new Date(h.created).toLocaleString()}}</small>
+                  <small class="text-muted ms-5">{{new Date(h.created).toLocaleString()}}</small>
                </router-link>
             </div>
          </div>
