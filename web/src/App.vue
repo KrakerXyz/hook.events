@@ -1,4 +1,3 @@
-
 <template>
    <div class="d-flex flex-column h-100">
       <nav class="navbar navbar-dark bg-dark navbar-expand-sm">
@@ -21,9 +20,9 @@
                </li>
                <li class="nav-item">
                   <button
+                     id="btn-google"
                      class="btn btn-link nav-link"
-                     @click="signin"
-                  >Sign In</button>
+                  >Sign In/Up</button>
                </li>
             </ul>
 
@@ -39,43 +38,56 @@
 </template>
 
 <script lang="ts">
-   import { defineComponent } from 'vue';
+   import { defineComponent, onMounted } from 'vue';
 
-   declare var google: any;
+   /* eslint-disable no-undef */
 
    export default defineComponent({
       setup() {
 
-         const signin = () => {
+         if (process.env['NODE_ENV'] !== 'development') {
 
-            google.accounts.id.initialize({
-               client_id: process.env['VUE_APP_GOOGLE_CLIENT_ID'],
-               callback: (resp: any) => {
-                  console.log('google-login-response', resp);
+            const clarity = document.createElement('script');
+            clarity.innerText = '(function (c, l, a, r, i, t, y) { c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) }; t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i; y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y); })(window, document, "clarity", "script", "4iwjk3wxd1");';
+            document.head.appendChild(clarity);
+
+         }
+
+         onMounted(() => {
+
+            gapi.load('auth2', function () {
+               // Retrieve the singleton for the GoogleAuth library and set up the client.
+               const auth2 = gapi.auth2.init({
+                  client_id: process.env['VUE_APP_GOOGLE_CLIENT_ID'],
+                  cookie_policy: 'single_host_origin',
+                  fetch_basic_profile: true
+               });
+
+               if (auth2.isSignedIn) {
+                  console.log('Already signed in');
+                  auth2.currentUser.listen(user => {
+                     const profile = user.getBasicProfile();
+                     console.log('email', profile.getEmail());
+                  });
+
+               } else {
+                  auth2.attachClickHandler(
+                     document.getElementById('btn-google'),
+                     {},
+                     (user) => {
+                        console.log('success', user);
+                     },
+                     (reason) => {
+                        console.log('fail', reason);
+                     });
+
                }
+
             });
 
-            google.accounts.id.prompt((notification: any) => {
-               console.log('google-notification', notification);
-               const moment: 'display' = notification.getMomentType();
+         });
 
-               if (moment === 'display') {
-                  const isDisplayed = notification.isDisplayed();
-                  if (!isDisplayed) {
-                     const reason = notification.getNotDisplayedReason();
-                     console.warn(`Failed to display signin - ${reason}`);
-                  }
-
-                  return;
-               }
-
-               console.warn(`Unknown moment - ${moment}`);
-
-            });
-
-         };
-
-         return { signin };
+         return {};
       },
    });
 </script>

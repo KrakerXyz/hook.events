@@ -63,7 +63,7 @@ app.all('/*', async (req, res) => {
       staticHandler(req, res, () => {
 
          // eslint-disable-next-line quotes
-         res.header('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://kit.fontawesome.com https://kit-pro.fontawesome.com https://www.clarity.ms accounts.google.com; object-src 'none'; style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com https://fonts.googleapis.com; img-src 'self'; media-src 'none'; frame-src 'none'; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://kit-pro.fontawesome.com https://ka-p.fontawesome.com https://www.clarity.ms accounts.google.com");
+         res.header('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://kit.fontawesome.com https://kit-pro.fontawesome.com https://www.clarity.ms apis.google.com; object-src 'none'; style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com https://fonts.googleapis.com; img-src 'self'; media-src 'none'; frame-src 'none'; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://kit-pro.fontawesome.com https://ka-p.fontawesome.com https://www.clarity.ms");
 
          res.sendFile(path.resolve(__dirname, 'vueDist/index.html'));
 

@@ -16,7 +16,9 @@
          ]
       },
       "types": [
-         "node"
+         "node",
+         "gapi",
+         "gapi.auth2"
       ],
       "lib": [
          "ES2019",
