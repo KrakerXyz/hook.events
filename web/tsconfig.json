@@ -16,7 +16,6 @@
          ]
       },
       "types": [
-         "google-one-tap",
          "node"
       ],
       "lib": [
