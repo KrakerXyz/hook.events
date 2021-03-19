@@ -17,6 +17,12 @@
       <div class="flex-grow-1 overflow-auto">
          <router-view></router-view>
       </div>
+
+      <!-- <div
+         id="g_id_onload"
+         :data-client_id="clientId"
+         data-login_uri="https://005c84eba71548c5ac51ee853b95bf77.hook.events"
+      ></div> -->
    </div>
 </template>
 
@@ -25,7 +31,8 @@
 
    export default defineComponent({
       setup() {
-         return {};
+         const clientId = process.env['VUE_APP_GOOGLE_CLIENT_ID'];
+         return { clientId };
       },
    });
 </script>

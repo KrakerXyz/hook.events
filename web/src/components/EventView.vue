@@ -95,7 +95,10 @@
          const contentType = computed(() => {
             const contentTypeKey = Object.getOwnPropertyNames(props.event.headers).find(k => k.toLowerCase() === 'content-type');
             if (!contentTypeKey) { return null; }
-            return props.event.headers[contentTypeKey][0] ?? null;
+            const contentTypeValue = props.event.headers[contentTypeKey];
+            if (!contentTypeValue) { return null; }
+            if (Array.isArray(contentTypeValue)) { return contentTypeValue[0] ?? null; }
+            return contentTypeValue;
          });
 
          const queryString = computed(() => {
