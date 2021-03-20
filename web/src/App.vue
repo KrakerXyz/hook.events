@@ -19,10 +19,7 @@
                   >Docs</router-link>
                </li>
                <li class="nav-item">
-                  <button
-                     id="btn-google"
-                     class="btn btn-link nav-link"
-                  >Sign In/Up</button>
+                  <nav-user></nav-user>
                </li>
             </ul>
 
@@ -38,11 +35,11 @@
 </template>
 
 <script lang="ts">
-   import { defineComponent, onMounted } from 'vue';
-
-   /* eslint-disable no-undef */
+   import { defineComponent } from 'vue';
+   import NavUser from './components/NavUser.vue';
 
    export default defineComponent({
+      components: { NavUser },
       setup() {
 
          if (process.env['NODE_ENV'] !== 'development') {
@@ -52,41 +49,6 @@
             document.head.appendChild(clarity);
 
          }
-
-         onMounted(() => {
-
-            gapi.load('auth2', function () {
-               // Retrieve the singleton for the GoogleAuth library and set up the client.
-               const auth2 = gapi.auth2.init({
-                  client_id: process.env['VUE_APP_GOOGLE_CLIENT_ID'],
-                  cookie_policy: 'single_host_origin',
-                  fetch_basic_profile: true
-               });
-
-               if (auth2.isSignedIn) {
-
-                  console.log('Already signed in');
-                  auth2.currentUser.listen(user => {
-                     const profile = user.getBasicProfile();
-                     console.log('email', profile.getEmail());
-                  });
-
-               } else {
-                  auth2.attachClickHandler(
-                     document.getElementById('btn-google'),
-                     {},
-                     (user) => {
-                        console.log('success', user);
-                     },
-                     (reason) => {
-                        console.log('fail', reason);
-                     });
-
-               }
-
-            });
-
-         });
 
          return {};
       },
