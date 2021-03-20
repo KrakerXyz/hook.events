@@ -4,7 +4,7 @@
       <div class="row">
          <div class="col">
             <h1>Yet another webhook testing tool</h1>
-            <p>Create your own webhook receiver that allows you to view incoming requests in real-time.</p>
+            <p>Create your own webhook receiver that allows you to view incoming http requests in real-time.</p>
             <p>Want to be able to react to incoming events within your code? You can do that too, even from behind your firewall. Check out the <router-link :to="{name: 'docs'}">Docs</router-link> for an example</p>
          </div>
       </div>
