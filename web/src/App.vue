@@ -11,12 +11,19 @@
 
             <div id="nav-portal"></div>
 
-            <ul class="navbar-nav">
+            <ul class="navbar-nav align-items-center">
                <li class="nav-item">
                   <router-link
                      :to="{name: 'docs'}"
                      class='nav-link'
                   >Docs</router-link>
+               </li>
+               <li class="nav-item me-3">
+                  <a
+                     class="nav-link py-0"
+                     href="https://github.com/KrakerXyz/hook.events"
+                     target="_blank"
+                  ><i class="fab fa-github-square fw"></i></a>
                </li>
                <li class="nav-item">
                   <nav-user></nav-user>
@@ -68,5 +75,9 @@
       font-size: 2.25rem;
       text-transform: lowercase;
       line-height: 1rem;
+   }
+
+   .fa-github-square {
+      font-size: 2.5rem;
    }
 </style>

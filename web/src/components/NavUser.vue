@@ -1,24 +1,25 @@
 
 <template>
-   <div>
-      <button
-         v-if="!user"
-         id="btn-google"
-         class="btn btn-link nav-link"
-      >Sign In/Up</button>
+   <button
+      v-if="!user"
+      id="btn-google"
+      class="btn btn-link nav-link"
+   >Sign In/Up</button>
 
-      <!-- I tried putting the v-if on the spinner but we get a vue error. It should work. Seems like a legitimate bug with vue at the time (3/19/2021). Try again later -->
-      <div v-if="user && user.status === 'loading'">
-         <v-spinner class="loading text-white"></v-spinner>
-      </div>
-
-      <img
-         class="avatar"
-         v-if="user && user.status === 'loaded'"
-         :src="user.avatarUrl"
-         alt="Signed In"
-      >
+   <!-- I tried putting the v-if on the spinner but we get a vue error. It should work. Seems like a legitimate bug with vue at the time (3/19/2021). Try again later -->
+   <div
+      class="nav-link"
+      v-if="user && user.status === 'loading'"
+   >
+      <v-spinner class="loading text-white"></v-spinner>
    </div>
+
+   <img
+      class="avatar"
+      v-if="user && user.status === 'loaded'"
+      :src="user.avatarUrl"
+      alt="Signed In"
+   >
 </template>
 
 <script lang="ts">
@@ -88,7 +89,7 @@
 
 <style lang="postcss" scoped>
    .avatar {
-      height: 40px;
+      height: 35px;
       width: auto;
       border-radius: 10%;
    }
