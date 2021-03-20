@@ -24,6 +24,11 @@
          "ES2019",
          "dom",
          "dom.iterable"
+      ],
+      "plugins": [
+         {
+            "name": "@vuedx/typescript-plugin-vue"
+         }
       ]
    }
 }

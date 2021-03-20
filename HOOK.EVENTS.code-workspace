@@ -51,5 +51,6 @@
 		],
 		"vetur.experimental.templateInterpolationService": true,
 		"editor.tabSize": 3,
+		"typescript.tsdk": "web\\node_modules\\typescript\\lib",
 	}
 }
