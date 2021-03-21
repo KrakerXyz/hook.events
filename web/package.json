@@ -19,7 +19,7 @@
     "lint": "eslint ./src/**/*.ts"
   },
   "dependencies": {
-    "hook-events": "0.0.49",
+    "hook-events": "file:../client",
     "vue": "^3.0.4",
     "vue-router": "^4.0.0-rc.6"
   },

@@ -1,4 +1,4 @@
-import { ApiClient } from 'hook-events/api';
+import { ApiClient } from 'hook-events';
 
 let client: ApiClient;
 export function useApiClient(): ApiClient {

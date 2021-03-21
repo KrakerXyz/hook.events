@@ -76,8 +76,8 @@
 <script lang="ts">
    import { useApiClient } from '@/services/useApiClient';
    import { useHookStore } from '@/services/useHookStore';
-   import { Client as ReceiverClient } from 'hook-events/receiver';
-   import type { EventDataSlim, Hook } from 'hook-events/types';
+   import { Client as ReceiverClient } from 'hook-events';
+   import type { EventDataSlim, Hook } from 'hook-events';
    import { computed, defineComponent, onUnmounted, ref, watch } from 'vue';
    import type { EventDataVm } from './EventDataVm';
    import EventListItem from './EventListItem.vue';

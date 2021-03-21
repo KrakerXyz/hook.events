@@ -24,7 +24,9 @@
 
 <script lang="ts">
 
+   import { useApiClient } from '@/services/useApiClient';
    import { defineComponent, onMounted, ref } from 'vue';
+   import type { GoogleToken } from 'hook-events';
 
    //We have gapi listed in tsconfig and the typings are present but vetur is still complaining.
    /* eslint-disable no-undef */
@@ -34,43 +36,64 @@
 
          const user = ref<User | null>(null);
 
-         onMounted(() => {
+         const apiClient = useApiClient();
 
+         const verifyToken = async (googleUser: gapi.auth2.GoogleUser, auth2: gapi.auth2.GoogleAuth): Promise<void> => {
+
+            user.value = {
+               status: 'loading',
+               avatarUrl: null
+            };
+
+            const authResponse = googleUser.getAuthResponse();
+
+            const googleToken: GoogleToken = {
+               idToken: authResponse.id_token
+            };
+
+            try {
+
+               const apiToken = await apiClient.getTokenFromGoogle(googleToken);
+               console.log('apiToken', apiToken.token);
+
+               const profile = googleUser.getBasicProfile();
+
+               user.value = {
+                  status: 'loaded',
+                  avatarUrl: profile.getImageUrl()
+               };
+
+            } catch {
+               auth2.signOut();
+               user.value = null;
+            }
+         };
+
+         onMounted(() => {
             gapi.load('auth2', function () {
                // Retrieve the singleton for the GoogleAuth library and set up the client.
+               const client_id = process.env['VUE_APP_GOOGLE_CLIENT_ID'];
+
                const auth2 = gapi.auth2.init({
-                  client_id: process.env['VUE_APP_GOOGLE_CLIENT_ID'],
+                  client_id,
                   cookie_policy: 'single_host_origin',
                   fetch_basic_profile: true
                });
 
-               if (auth2.isSignedIn) {
+               auth2.isSignedIn.listen(isSignedIn => {
+                  if (!isSignedIn) { return; }
+                  const googleUser = auth2.currentUser.get();
+                  verifyToken(googleUser, auth2);
+               });
 
-                  user.value = {
-                     status: 'loading',
-                     avatarUrl: null
-                  };
-
-                  auth2.currentUser.listen(googleUser => {
-                     const profile = googleUser.getBasicProfile();
-                     user.value = {
-                        status: 'loaded',
-                        avatarUrl: profile.getImageUrl()
-                     };
-                  });
-
-               } else {
-                  auth2.attachClickHandler(
-                     document.getElementById('btn-google'),
-                     {},
-                     (user) => {
-                        console.log('success', user);
-                     },
-                     (reason) => {
-                        console.log('fail', reason);
-                     }
-                  );
-               }
+               auth2.attachClickHandler(
+                  document.getElementById('btn-google'),
+                  {},
+                  () => ({}), //This is for a success callback but we don't need it because the isSignedIn listener will catch it
+                  reason => {
+                     console.log('google-signin-failed', reason);
+                  }
+               );
 
             });
 

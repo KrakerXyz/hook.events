@@ -60,7 +60,7 @@
 <script lang="ts">
 
    import { useApiClient } from '@/services/useApiClient';
-   import { EventDataSlim } from 'hook-events/types';
+   import type { EventDataSlim } from 'hook-events';
    import { computed, defineComponent, ref, watch } from 'vue';
    import * as BodyViewers from './eventBodyViewers';
    import MethodBadge from './MethodBadge.vue';

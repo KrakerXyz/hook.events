@@ -58,7 +58,7 @@
          const hookStore = useHookStore();
 
          const createHook = async () => {
-            const hook = await apiClient.postHook();
+            const hook = await apiClient.createHook();
             hookStore.addHook(hook);
             router.push({ name: 'hook', params: { hookId: hook.id } });
          };
