@@ -1,5 +1,7 @@
 import { EnvKey, getRequiredConfig } from '@/config';
 import { createLogger } from '@/services/logger';
+import { newHookId } from '@/services/newHookId';
+import { addGoogleUser, getGoogleUser, NewUser, User } from '@/services/persistence/userStore';
 import { json, RequestHandler, Router } from 'express';
 import { OAuth2Client } from 'google-auth-library';
 import type { ApiToken, GoogleToken } from 'hook-events';
@@ -18,7 +20,7 @@ const postGoogleToken: RequestHandler = async (req, res): Promise<void> => {
 
    const client = new OAuth2Client(clientId);
 
-   let googleUserId: string | null = null;
+   let user: User | null = null;
 
    try {
       const ticket = await client.verifyIdToken({
@@ -28,16 +30,28 @@ const postGoogleToken: RequestHandler = async (req, res): Promise<void> => {
       const payload = ticket.getPayload();
       if (!payload) { throw new Error('empty payload'); }
 
-      googleUserId = payload.sub;
+      const googleUserId = payload.sub;
+
+      log.info('Verified google token for {googleUserId}', { googleUserId });
+
+      user = await getGoogleUser(googleUserId);
+
+      if (!user) {
+         const newUser: NewUser = {
+            created: Date.now(),
+            adminApiToken: newHookId()
+         };
+         user = await addGoogleUser(googleUserId, newUser);
+      }
 
    } catch (e) {
-      log.warn('Error validating google auth token - {e}', e);
+      log.warn('Error validating google auth token - {errorMessage}', { errorMessage: e.toString() });
       res.status(401).send('Could not validate google idToken');
       return;
    }
 
    const apiToken: ApiToken = {
-      token: googleUserId
+      token: user!.adminApiToken
    };
 
    res.status(200).send(apiToken);
