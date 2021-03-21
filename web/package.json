@@ -20,12 +20,14 @@
   },
   "dependencies": {
     "hook-events": "file:../client",
+    "uuid": "^8.3.2",
     "vue": "^3.0.4",
     "vue-router": "^4.0.0-rc.6"
   },
   "devDependencies": {
     "@types/gapi": "0.0.39",
     "@types/gapi.auth2": "0.0.54",
+    "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "^4.18.0",
     "@typescript-eslint/parser": "^4.18.0",
     "@vue/cli-plugin-router": "^4.5.12",

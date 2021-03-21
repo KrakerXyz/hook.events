@@ -51,7 +51,7 @@ const postGoogleToken: RequestHandler = async (req, res): Promise<void> => {
    }
 
    const apiToken: ApiToken = {
-      token: user!.adminApiToken
+      token: `Bearer ${user!.adminApiToken}`
    };
 
    res.status(200).send(apiToken);

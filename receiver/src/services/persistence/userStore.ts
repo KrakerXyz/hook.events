@@ -13,10 +13,14 @@ const userModel = mongoose.model('user', new mongoose.Schema({
 
 export async function getGoogleUser(googleUserId: string): Promise<User | null> {
    const googleId = `google-${googleUserId}`;
+
    const startTime = performance.now();
-   const hook = await userModel.findOne({ id: googleId }).exec();
+
+   const user = await userModel.findOne({ id: googleId }).exec();
+
    log.debug('Got google user {googleId} from db in {elapsed}ms', { googleId, elapsed: performance.now() - startTime });
-   return deMongoose<User>(hook);
+
+   return deMongoose<User>(user);
 }
 
 export async function addGoogleUser(googleUserId: string, user: NewUser): Promise<User> {

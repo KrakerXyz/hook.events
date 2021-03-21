@@ -27,6 +27,7 @@
    import { useApiClient } from '@/services/useApiClient';
    import { defineComponent, onMounted, ref } from 'vue';
    import type { GoogleToken } from 'hook-events';
+   import { setApiToken } from '@/services/apiToken';
 
    //We have gapi listed in tsconfig and the typings are present but vetur is still complaining.
    /* eslint-disable no-undef */
@@ -62,6 +63,8 @@
                   status: 'loaded',
                   avatarUrl: profile.getImageUrl()
                };
+
+               setApiToken(apiToken.token);
 
             } catch {
                auth2.signOut();

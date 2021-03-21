@@ -15,7 +15,8 @@ export class ApiClient {
       this._axios.interceptors.request.use(async c => {
 
          if (this.options?.apiToken) {
-            const token = await Promise.resolve(this.options.apiToken);
+            const tokenValue = (typeof this.options.apiToken === 'function' ? this.options.apiToken() : this.options.apiToken);
+            const token = await Promise.resolve(tokenValue);
             if (token) { c.headers.Authorization = token; }
          }
 
@@ -78,9 +79,9 @@ export interface ApiOptions {
    host?: string;
 
    /** An arbitrary name for this client to include in logs */
-   clientId?: (() => string | Promise<string>) | string;
+   clientId?: (() => string | null | Promise<string | null>) | string | null;
 
    /** A api token to be used for authorized calls */
-   apiToken?: (() => string | Promise<string>) | string;
+   apiToken?: (() => string | null | Promise<string | null>) | string | null;
 
 }
