@@ -42,6 +42,7 @@ const postGoogleToken: RequestHandler = async (req, res): Promise<void> => {
             adminApiToken: newHookId()
          };
          user = await addGoogleUser(googleUserId, newUser);
+         log.info('Created new google user {userId}', { userId: user.id });
       }
 
    } catch (e) {

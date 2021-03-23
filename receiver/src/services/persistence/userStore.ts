@@ -37,6 +37,18 @@ export async function addGoogleUser(googleUserId: string, user: NewUser): Promis
    return newUser;
 }
 
+/** Find a user by their adminApiToken */
+export async function getTokenUser(token: string): Promise<User | null> {
+
+   const startTime = performance.now();
+
+   const user = await userModel.findOne({ adminApiToken: token }).exec();
+
+   log.debug('Got user {userId} by token from db in {elapsed}ms', { userId: user?.id ?? '[404]', elapsed: performance.now() - startTime });
+
+   return deMongoose<User>(user);
+}
+
 export interface User {
 
    id: string;

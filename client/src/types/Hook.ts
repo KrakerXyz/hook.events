@@ -11,4 +11,7 @@ export interface Hook {
    /** The time the hook was created. Represented as number of milliseconds elapsed since Januar 1st, 1970, 00:00:00 UTC */
    created: number;
 
+   /** For non-public hooks, the id of the user that created the hook */
+   ownerId?: string | null;
+
 }
