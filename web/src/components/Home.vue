@@ -25,7 +25,7 @@
          class="row"
       >
          <div class="col">
-            <p>Your previously created hooks from this machine</p>
+            <h4>Public hooks created on this machine</h4>
             <div class="list-group mb-3">
                <router-link
                   v-for="h of hooks"
@@ -39,14 +39,45 @@
             </div>
          </div>
       </div>
+
+      <div class="row">
+         <div class="col">
+            <h4>Private hooks</h4>
+            <div class="list-group">
+               <div
+                  class="list-group-item list-group-item-secondary"
+                  v-if="!isSignedIn"
+               >Sign In/Up to create private hooks</div>
+               <div
+                  class="list-group-item list-group-item-secondary"
+                  v-if="isSignedIn && !privateHooks.length"
+               >
+                  You do not have any private hooks. <span
+                     role="button"
+                     class="btn-link"
+                     @click="createHook()"
+                  >Create one</span>
+               </div>
+               <div
+                  v-for="hook of privateHooks"
+                  :key="hook.id"
+               >
+
+               </div>
+            </div>
+         </div>
+      </div>
+
    </div>
 </template>
 
 <script lang="ts">
-   import { defineComponent } from 'vue';
+   import { computed, defineComponent } from 'vue';
    import { useApiClient } from '@/services/useApiClient';
    import { useRouter } from 'vue-router';
    import { useHookStore } from '@/services/useHookStore';
+   import { useApiToken } from '@/services/apiToken';
+   import { Hook } from 'hook-events';
 
    export default defineComponent({
       props: {},
@@ -63,9 +94,14 @@
             router.push({ name: 'hook', params: { hookId: hook.id } });
          };
 
+         const apiToken = useApiToken();
+         const isSignedIn = computed(() => !!apiToken.value);
+
          const hooks = [...hookStore.hooks].sort((a, b) => b.created - a.created);
 
-         return { createHook, hooks };
+         const privateHooks: Hook[] = [];
+
+         return { createHook, hooks, isSignedIn, privateHooks };
       },
    });
 </script>

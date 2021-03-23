@@ -6,11 +6,11 @@ import { addHook, getHook } from '@/services/persistence/hookStore';
 import { json, RequestHandler } from 'express';
 import { Router } from 'express';
 import { Hook } from 'hook-events';
-import { AuthenticatedRequest } from './AuthenticatedRequest';
+import { HeRequest } from './HeRequest';
 
 const log = createLogger('hookRouter');
 
-const getById: RequestHandler = async (req: AuthenticatedRequest, res) => {
+const getById: RequestHandler = async (req: HeRequest, res) => {
    const hookId = req.params['hookId'];
    if (!hookId) {
       res.status(404).send('hookId not found');
@@ -32,7 +32,7 @@ const getById: RequestHandler = async (req: AuthenticatedRequest, res) => {
    res.status(200).send(hook);
 };
 
-const post: RequestHandler = async (req: AuthenticatedRequest, res) => {
+const post: RequestHandler = async (req: HeRequest, res) => {
 
    const hook: Hook = {
       id: newHookId(),
@@ -47,7 +47,7 @@ const post: RequestHandler = async (req: AuthenticatedRequest, res) => {
    res.send(hook);
 };
 
-const getEvents: RequestHandler = async (req: AuthenticatedRequest, res) => {
+const getEvents: RequestHandler = async (req: HeRequest, res) => {
    const hookId = req.params['hookId'];
    if (!hookId) {
       res.status(400).send('hookId not found');

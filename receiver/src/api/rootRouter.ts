@@ -4,14 +4,15 @@ import hookRouter from './hookRouter';
 import eventRouter from './eventRouter';
 import authRouter from './authRouter';
 import { getTokenUser } from '@/services/persistence/userStore';
-import { AuthenticatedRequest } from './AuthenticatedRequest';
+import { HeRequest } from './HeRequest';
 import { createLogger } from '@/services/logger';
 
 const router = Router();
 
 const log = createLogger('rootRouter');
 
-router.use(async (req: AuthenticatedRequest, res, next) => {
+/** Authorize the user if given */
+router.use(async (req: HeRequest, res, next) => {
 
    const auth = req.headers.authorization;
    if (!auth) {
@@ -41,6 +42,21 @@ router.use(async (req: AuthenticatedRequest, res, next) => {
 
    req.user = user;
 
+   next();
+
+});
+
+/** Setup the client id */
+router.use((req: HeRequest, res, next) => {
+
+   const clientId = req.headers['he-client-id'];
+
+   if (Array.isArray(clientId)) {
+      res.status(400).send('Malformed he-client-id header. Multiple values not supported');
+      return;
+   }
+
+   req.clientId = clientId;
    next();
 
 });

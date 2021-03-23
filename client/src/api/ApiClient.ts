@@ -78,7 +78,7 @@ export interface ApiOptions {
    /** The host of the api server */
    host?: string;
 
-   /** An arbitrary name for this client to include in logs */
+   /** An unique identifier for this client */
    clientId?: (() => string | null | Promise<string | null>) | string | null;
 
    /** A api token to be used for authorized calls */

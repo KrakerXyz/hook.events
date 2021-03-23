@@ -2,13 +2,13 @@ import { getBody } from '@/services/persistence/bodyStorageService';
 import { getEvent } from '@/services/persistence/eventDataStore';
 import { RequestHandler, Router } from 'express';
 import { deleteEvent as persistanceDeleteEvent } from '@/services/persistence/eventDataStore';
-import { AuthenticatedRequest } from './AuthenticatedRequest';
+import { HeRequest } from './HeRequest';
 import { getHook } from '@/services/persistence/hookStore';
 import { createLogger } from '@/services/logger';
 
 const log = createLogger('eventRouter');
 
-const getEventBody: RequestHandler = async (req: AuthenticatedRequest, res) => {
+const getEventBody: RequestHandler = async (req: HeRequest, res) => {
    const eventId = req.params['eventId'];
    if (!eventId) {
       res.status(400).send('eventId missing');
@@ -46,7 +46,7 @@ const getEventBody: RequestHandler = async (req: AuthenticatedRequest, res) => {
 
 };
 
-const deleteEvent: RequestHandler = async (req: AuthenticatedRequest, res) => {
+const deleteEvent: RequestHandler = async (req: HeRequest, res) => {
    const eventId = req.params['eventId'];
    if (!eventId) {
       res.status(400).send('eventId not found');
