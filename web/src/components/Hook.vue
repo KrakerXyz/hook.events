@@ -19,7 +19,7 @@
       </teleport>
 
       <div
-         v-if="!events"
+         v-if="!events && !isUnauthorized"
          class="h-100 d-flex align-items-center justify-content-center"
       >
          <v-spinner></v-spinner>
@@ -27,7 +27,7 @@
 
       <div
          class="container-fluid py-3 h-100"
-         v-else-if="events.length"
+         v-else-if="events && events.length"
       >
          <div class="row h-100 no-gutters">
             <div class="col-4 h-100">
@@ -66,16 +66,40 @@
       </div>
 
       <hook-empty
-         v-else
+         v-else-if="!isUnauthorized"
          :hookId="hookId"
       ></hook-empty>
+
+      <div
+         class="container text-center"
+         v-if="isUnauthorized"
+      >
+
+         <div class="alert alert-danger mt-4">
+            <h2>Unauthorized</h2>
+         </div>
+
+         <div
+            class="mt-3"
+            v-if="!isSignedIn"
+         >
+            <h4>This hook requires that you be signed in</h4>
+         </div>
+
+         <div
+            class="mt-3"
+            v-if="isSignedIn"
+         >
+            You do not have access to this hook
+         </div>
+
+      </div>
 
    </div>
 </template>
 
 <script lang="ts">
    import { useApiClient } from '@/services/useApiClient';
-   import { useHookStore } from '@/services/useHookStore';
    import { Client as ReceiverClient } from 'hook-events';
    import type { EventDataSlim, Hook } from 'hook-events';
    import { computed, defineComponent, onUnmounted, ref, watch } from 'vue';
@@ -85,6 +109,7 @@
    import HookEmpty from './HookEmpty.vue';
    import { useRoute, useRouter } from 'vue-router';
    import EventView from './EventView.vue';
+   import { useApiToken } from '@/services/apiToken';
 
    export default defineComponent({
       components: {
@@ -102,15 +127,26 @@
 
          const hookAddress = useHookAddress(props.hookId);
 
-         const hookStore = useHookStore();
+         const hookRef = ref<Hook | null>(null);
+         const isUnauthorized = ref(false);
 
-         const hookRef = ref<Hook | null>(hookStore.hooks.find(h => h.id === props.hookId) ?? null);
+         const apiToken = useApiToken();
+         const isSignedIn = computed(() => !!apiToken.value);
 
          const apiClient = useApiClient();
 
-         if (!hookRef.value) {
-            apiClient.getHook(props.hookId).then(h => hookRef.value = h);
-         }
+         watch(apiToken, () => {
+            apiClient
+               .getHook(props.hookId)
+               .then(h => {
+                  hookRef.value = h;
+                  isUnauthorized.value = false;
+               })
+               .catch(e => {
+                  if (e.response?.status !== 403) { throw e; }
+                  isUnauthorized.value = true;
+               });
+         }, { immediate: true });
 
          let receiver: ReceiverClient | null = null;
 
@@ -178,7 +214,7 @@
             receiver?.dispose();
          });
 
-         return { events, hookAddress, selectedEventId, selectedEvent, deleteEvent };
+         return { events, hookAddress, selectedEventId, selectedEvent, deleteEvent, isUnauthorized, isSignedIn };
       }
    });
 </script>
