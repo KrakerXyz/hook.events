@@ -1,7 +1,7 @@
 import { Ref, ref } from 'vue';
 
 const apiToken = ref<string | null>(null);
-export function setApiToken(token: string) {
+export function setApiToken(token: string | null) {
    apiToken.value = token;
 }
 

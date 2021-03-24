@@ -100,7 +100,7 @@
 
          const createHook = async () => {
             const hook = await apiClient.createHook();
-            hookStore.addHook(hook);
+            if (!hook.ownerId) { hookStore.addHook(hook); }
             router.push({ name: 'hook', params: { hookId: hook.id } });
          };
 
@@ -108,7 +108,7 @@
 
          const hooks = [...hookStore.hooks].filter(h => !h.ownerId).sort((a, b) => b.created - a.created);
 
-         const privateHooks = ref<Hook[]>([...hookStore.hooks].filter(h => !!h.ownerId).sort((a, b) => b.created - a.created));
+         const privateHooks = ref<Hook[]>([]);
 
          watch(isSignedIn, () => {
             if (isSignedIn.value) {
@@ -116,7 +116,7 @@
             } else if (privateHooks.value.length) {
                privateHooks.value = [];
             }
-         });
+         }, { immediate: true });
 
          return { createHook, hooks, isSignedIn, privateHooks };
       },

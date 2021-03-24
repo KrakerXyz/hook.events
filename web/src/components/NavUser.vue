@@ -14,18 +14,30 @@
       <v-spinner class="loading text-white"></v-spinner>
    </div>
 
-   <img
-      class="avatar"
+   <div
+      class="user-menu position-relative"
       v-if="user && user.status === 'loaded'"
-      :src="user.avatarUrl"
-      alt="Signed In"
    >
+      <img
+         :src="user.avatarUrl"
+         alt="Signed In"
+      >
+
+      <ul class="d-none position-absolute list-group">
+         <button
+            class="list-group-item list-group-item-action"
+            @click="signout()"
+         >
+            Sign out
+         </button>
+      </ul>
+   </div>
 </template>
 
 <script lang="ts">
 
    import { useApiClient } from '@/services/useApiClient';
-   import { defineComponent, onMounted, ref } from 'vue';
+   import { defineComponent, nextTick, onMounted, ref } from 'vue';
    import type { GoogleToken } from 'hook-events';
    import { setApiToken } from '@/services/apiToken';
 
@@ -55,7 +67,6 @@
             try {
 
                const apiToken = await apiClient.getTokenFromGoogle(googleToken);
-               console.log('apiToken', apiToken.token);
 
                const profile = googleUser.getBasicProfile();
 
@@ -72,7 +83,7 @@
             }
          };
 
-         onMounted(() => {
+         const initGoogle = () => {
             gapi.load('auth2', function () {
                // Retrieve the singleton for the GoogleAuth library and set up the client.
                const client_id = process.env['VUE_APP_GOOGLE_CLIENT_ID'];
@@ -99,10 +110,20 @@
                );
 
             });
+         };
 
+         onMounted(() => {
+            initGoogle();
          });
 
-         return { user };
+         const signout = () => {
+            gapi.auth2.getAuthInstance()?.signOut();
+            user.value = null;
+            setApiToken(null);
+            nextTick(() => initGoogle());
+         };
+
+         return { user, signout };
       }
    });
 
@@ -114,10 +135,18 @@
 </script>
 
 <style lang="postcss" scoped>
-   .avatar {
-      height: 35px;
-      width: auto;
-      border-radius: 10%;
+   .user-menu {
+      img {
+         height: 35px;
+         width: auto;
+         border-radius: 10%;
+      }
+
+      &:hover ul {
+         display: block !important;
+         right: 0;
+         white-space: nowrap;
+      }
    }
 
    .loading {
