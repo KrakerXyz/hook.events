@@ -2,15 +2,31 @@
 import { createLogger } from '@/services/logger';
 import { newHookId } from '@/services/newHookId';
 import { getEventsForHook } from '@/services/persistence/eventDataStore';
-import { addHook, getHook } from '@/services/persistence/hookStore';
+import { addHook, getHook, getHooks } from '@/services/persistence/hookStore';
 import { json, RequestHandler } from 'express';
 import { Router } from 'express';
 import { Hook } from 'hook-events';
 import { HeRequest } from './HeRequest';
 
+const hookRouter = Router();
+
 const log = createLogger('hookRouter');
 
-const getById: RequestHandler = async (req: HeRequest, res) => {
+const get: RequestHandler = async (req: HeRequest, res): Promise<void> => {
+
+   if (!req.user) {
+      res.status(400).send('Authentication required to list hooks');
+      return;
+   }
+
+   const hooks = await getHooks(req.user.id);
+
+   res.status(200).send(hooks);
+
+};
+hookRouter.get('/', get);
+
+const getById: RequestHandler = async (req: HeRequest, res): Promise<void> => {
    const hookId = req.params['hookId'];
    if (!hookId) {
       res.status(404).send('hookId not found');
@@ -31,8 +47,9 @@ const getById: RequestHandler = async (req: HeRequest, res) => {
 
    res.status(200).send(hook);
 };
+hookRouter.get('/:hookId', getById);
 
-const post: RequestHandler = async (req: HeRequest, res) => {
+const post: RequestHandler = async (req: HeRequest, res): Promise<void> => {
 
    const hook: Hook = {
       id: newHookId(),
@@ -46,8 +63,9 @@ const post: RequestHandler = async (req: HeRequest, res) => {
 
    res.send(hook);
 };
+hookRouter.post('/', json(), post);
 
-const getEvents: RequestHandler = async (req: HeRequest, res) => {
+const getEvents: RequestHandler = async (req: HeRequest, res): Promise<void> => {
    const hookId = req.params['hookId'];
    if (!hookId) {
       res.status(400).send('hookId not found');
@@ -71,11 +89,6 @@ const getEvents: RequestHandler = async (req: HeRequest, res) => {
    res.status(200).send(events);
 
 };
-
-const hookRouter = Router();
-
-hookRouter.post('/', json(), post);
-hookRouter.get('/:hookId', getById);
 hookRouter.get('/:hookId/events', getEvents);
 
 export default hookRouter;

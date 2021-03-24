@@ -62,7 +62,15 @@
                   v-for="hook of privateHooks"
                   :key="hook.id"
                >
-
+                  <router-link
+                     v-for="h of privateHooks"
+                     :key="h.id"
+                     :to="{name: 'hook', params: { hookId: h.id}}"
+                     class="list-group-item list-group-item-action"
+                  >
+                     {{h.id}}
+                     <small class="text-muted ms-5">{{new Date(h.created).toLocaleString()}}</small>
+                  </router-link>
                </div>
             </div>
          </div>
@@ -72,7 +80,7 @@
 </template>
 
 <script lang="ts">
-   import { computed, defineComponent } from 'vue';
+   import { computed, defineComponent, ref, watch } from 'vue';
    import { useApiClient } from '@/services/useApiClient';
    import { useRouter } from 'vue-router';
    import { useHookStore } from '@/services/useHookStore';
@@ -88,6 +96,8 @@
 
          const hookStore = useHookStore();
 
+         const isSignedIn = computed(() => !!apiToken.value);
+
          const createHook = async () => {
             const hook = await apiClient.createHook();
             hookStore.addHook(hook);
@@ -95,11 +105,18 @@
          };
 
          const apiToken = useApiToken();
-         const isSignedIn = computed(() => !!apiToken.value);
 
-         const hooks = [...hookStore.hooks].sort((a, b) => b.created - a.created);
+         const hooks = [...hookStore.hooks].filter(h => !h.ownerId).sort((a, b) => b.created - a.created);
 
-         const privateHooks: Hook[] = [];
+         const privateHooks = ref<Hook[]>([...hookStore.hooks].filter(h => !!h.ownerId).sort((a, b) => b.created - a.created));
+
+         watch(isSignedIn, () => {
+            if (isSignedIn.value) {
+               apiClient.getHooks().then(h => privateHooks.value = [...h].sort((a, b) => b.created - a.created));
+            } else if (privateHooks.value.length) {
+               privateHooks.value = [];
+            }
+         });
 
          return { createHook, hooks, isSignedIn, privateHooks };
       },

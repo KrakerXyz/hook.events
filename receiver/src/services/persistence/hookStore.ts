@@ -11,8 +11,16 @@ logger.debug('Creating mongoose model');
 const HookModel = mongoose.model('hook', new mongoose.Schema({
    id: String,
    created: Number,
-   description: String
+   description: String,
+   ownerId: String
 }));
+
+export async function getHooks(ownerId: string): Promise<Hook[]> {
+   const startTime = performance.now();
+   const hooks = await HookModel.find({ ownerId }).exec();
+   logger.debug('Got {count} hooks for owner {ownerId} from db in {elapsed}ms', { count: hooks.length, ownerId, elapsed: performance.now() - startTime });
+   return deMongoose<Hook>(hooks);
+}
 
 export async function getHook(hookId: string): Promise<Hook | null> {
    const startTime = performance.now();

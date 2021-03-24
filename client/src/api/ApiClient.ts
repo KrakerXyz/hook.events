@@ -30,6 +30,14 @@ export class ApiClient {
 
    }
 
+   /** Returns all hooks owned by the authenticated user */
+   public async getHooks(): Promise<Hook[]> {
+      const url = 'hooks';
+      return this._axios.get(url).then(r => {
+         return r.data;
+      });
+   }
+
    public async getHook(hookId: string): Promise<Hook> {
       const url = `hooks/${hookId}`;
       return this._axios.get(url).then(r => {
