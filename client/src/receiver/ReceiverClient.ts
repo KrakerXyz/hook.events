@@ -8,7 +8,7 @@ export { Subscription };
 export type Listener = (event: EventData) => Promise<void> | void;
 
 /** A client for connecting to and receiving inbound events from a hook */
-export class Client {
+export class ReceiverClient {
 
    private readonly _hookId: string;
    private readonly _scheme: 'http' | 'https';
@@ -31,7 +31,9 @@ export class Client {
       this._scheme = mxs[1] as 'http' | 'https';
 
       this._options = {
-         alwaysOn: options?.alwaysOn ?? false
+         alwaysOn: options?.alwaysOn ?? false,
+         apiToken: options?.apiToken,
+         clientId: options?.clientId
       };
 
       if (this._options.alwaysOn) {
@@ -47,6 +49,12 @@ export class Client {
    public get isDisposed() { return this._disposed; }
 
    private _socket: Socket | undefined | null;
+
+   private resolveValueProvider(valueProvider?: ValueProvider | null): Promise<string | null> {
+      if (!valueProvider) { return Promise.resolve(null); }
+      const value = (typeof valueProvider === 'function' ? valueProvider() : valueProvider);
+      return Promise.resolve(value);
+   }
 
    private async checkConnection(): Promise<void> {
 
@@ -67,10 +75,20 @@ export class Client {
 
       //If we don't have a socket, create one
       if (!this._socket) {
+
+         const headers: Record<string, string> = {};
+
+         const clientId = await this.resolveValueProvider(this._options.clientId);
+         if (clientId) { headers['he-client-id'] = clientId; }
+
+         const apiToken = await this.resolveValueProvider(this._options.apiToken);
+         if (apiToken) { headers['Authorization'] = apiToken; }
+
          this._socket = io(`${this._scheme}://${this._host}`, {
             transports: ['websocket'],
             query: { hookId: this._hookId },
-            path: '/b1cb9b4abce54cd8add7e0ad9be94e4b'
+            path: '/b1cb9b4abce54cd8add7e0ad9be94e4b',
+            extraHeaders: headers
          });
          this._socket.on('event', async (e: EventData) => {
             for (const l of this._eventListeners) {
@@ -116,9 +134,17 @@ export class Client {
 
 }
 
+type ValueProvider = (() => string | null | Promise<string | null>) | string | null;
+
 /** Options for a ReceiverClient */
 export interface ReceiverOptions {
    /** Defaults to false which means a connection to the server will only be maintained for as long as there are even listeners. Set to true to maintain a connection even while there are no listeners  */
    alwaysOn: boolean;
+
+   /** An unique identifier for this client */
+   clientId?: ValueProvider;
+
+   /** A api token to be used for authorized calls */
+   apiToken?: ValueProvider;
 
 }

@@ -15,19 +15,24 @@ export class ApiClient {
       this._axios.interceptors.request.use(async c => {
 
          if (this.options?.apiToken) {
-            const tokenValue = (typeof this.options.apiToken === 'function' ? this.options.apiToken() : this.options.apiToken);
-            const token = await Promise.resolve(tokenValue);
+            const token = await this.resolveValueProvider(this.options.apiToken);
             if (token) { c.headers.Authorization = token; }
          }
 
          if (this.options?.clientId) {
-            const clientId = await Promise.resolve(options?.clientId);
+            const clientId = await this.resolveValueProvider(this.options.clientId);
             if (clientId) { c.headers['he-client-id'] = clientId; }
          }
 
          return c;
       });
 
+   }
+
+   private resolveValueProvider(valueProvider?: ValueProvider | null): Promise<string | null> {
+      if (!valueProvider) { return Promise.resolve(null); }
+      const value = (typeof valueProvider === 'function' ? valueProvider() : valueProvider);
+      return Promise.resolve(value);
    }
 
    /** Returns all hooks owned by the authenticated user */
@@ -78,6 +83,8 @@ export class ApiClient {
 
 }
 
+type ValueProvider = (() => string | null | Promise<string | null>) | string | null;
+
 /** Options for the api client */
 export interface ApiOptions {
 
@@ -87,9 +94,9 @@ export interface ApiOptions {
    host?: string;
 
    /** An unique identifier for this client */
-   clientId?: (() => string | null | Promise<string | null>) | string | null;
+   clientId?: ValueProvider;
 
    /** A api token to be used for authorized calls */
-   apiToken?: (() => string | null | Promise<string | null>) | string | null;
+   apiToken?: ValueProvider;
 
 }

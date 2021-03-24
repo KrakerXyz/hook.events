@@ -99,17 +99,17 @@
 </template>
 
 <script lang="ts">
+   import { useApiToken } from '@/services/apiToken';
    import { useApiClient } from '@/services/useApiClient';
-   import { Client as ReceiverClient } from 'hook-events';
+   import { useHookAddress } from '@/services/useHookAddress';
    import type { EventDataSlim, Hook } from 'hook-events';
+   import { ReceiverClient } from 'hook-events';
    import { computed, defineComponent, onUnmounted, ref, watch } from 'vue';
+   import { useRoute, useRouter } from 'vue-router';
    import type { EventDataVm } from './EventDataVm';
    import EventListItem from './EventListItem.vue';
-   import { useHookAddress } from '@/services/useHookAddress';
-   import HookEmpty from './HookEmpty.vue';
-   import { useRoute, useRouter } from 'vue-router';
    import EventView from './EventView.vue';
-   import { useApiToken } from '@/services/apiToken';
+   import HookEmpty from './HookEmpty.vue';
 
    export default defineComponent({
       components: {

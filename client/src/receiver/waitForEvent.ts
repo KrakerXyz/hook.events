@@ -1,5 +1,5 @@
 import type { EventData } from '../types/EventData';
-import { Client as ReceiverClient } from './Client';
+import { ReceiverClient } from './ReceiverClient';
 
 /** Options for the waitForEvent function */
 interface WaitForEventOptions {
