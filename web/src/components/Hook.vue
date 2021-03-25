@@ -164,7 +164,9 @@
                return;
             }
 
-            receiver = new ReceiverClient(useHookAddress(props.hookId));
+            receiver = new ReceiverClient(useHookAddress(props.hookId), {
+               apiToken: () => apiToken.value
+            });
 
             receiver.onEvent(e => {
                //converting to a slim event to conserve memory

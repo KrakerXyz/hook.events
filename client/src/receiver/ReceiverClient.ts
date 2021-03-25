@@ -81,14 +81,23 @@ export class ReceiverClient {
          const clientId = await this.resolveValueProvider(this._options.clientId);
          if (clientId) { headers['he-client-id'] = clientId; }
 
-         const apiToken = await this.resolveValueProvider(this._options.apiToken);
-         if (apiToken) { headers['Authorization'] = apiToken; }
-
          this._socket = io(`${this._scheme}://${this._host}`, {
             transports: ['websocket'],
             query: { hookId: this._hookId },
             path: '/b1cb9b4abce54cd8add7e0ad9be94e4b',
-            extraHeaders: headers
+            extraHeaders: headers,
+            withCredentials: true,
+            auth: async (cb) => {
+               const authValue = await this.resolveValueProvider(this._options.apiToken);
+               if (!authValue) {
+                  cb({});
+                  return;
+               }
+
+               cb({
+                  token: authValue
+               });
+            }
          });
          this._socket.on('event', async (e: EventData) => {
             for (const l of this._eventListeners) {

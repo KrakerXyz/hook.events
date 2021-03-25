@@ -4,6 +4,7 @@ import { Server } from 'http';
 import io from 'socket.io';
 import { createLogger } from './logger';
 import { getHook } from './persistence/hookStore';
+import { verifyAuthorizationHeader } from './verifyAuthorization';
 
 let ioServer: io.Server | null = null;
 
@@ -16,34 +17,61 @@ export function ioSetup(server: Server): void {
    if (ioServer) { throw new Error('ioSetup has already been called'); }
 
    ioServer = new io.Server(server, {
-      path: '/b1cb9b4abce54cd8add7e0ad9be94e4b',
-      allowRequest(req, fn) {
-         if (req.url?.includes('hookId=')) {
-            fn(null, true);
-         } else {
-            fn('hookId query required', false);
-         }
-      }
+      path: '/b1cb9b4abce54cd8add7e0ad9be94e4b'
    });
 
    ioServer.on('connection', clientConnected);
 
+   ioServer.use(async (socket, next) => {
+
+      const fn = (error: string | null, success: boolean) => {
+
+         if (!success) {
+            logger.warn('Failed socket handshake - {errorMessage}', { errorMessage: error });
+            next(new Error(error ?? ''));
+            return;
+         }
+
+         next();
+      };
+
+      const hookId = socket.handshake.query['hookId'] as string | undefined;
+
+      if (!hookId) {
+         fn('hookId query required', false);
+         return;
+      }
+
+      const hook = await getHook(hookId);
+
+      if (!hook) {
+         fn('hook does not exist', false);
+         return;
+      }
+
+      if (hook.ownerId) {
+
+         const authHeader = socket.handshake.auth['token'];
+
+         try {
+            await verifyAuthorizationHeader(authHeader);
+         } catch (e) {
+            fn(e, false);
+            return;
+         }
+
+      }
+
+      fn(null, true);
+   });
 }
 
 function clientConnected(socket: io.Socket): void {
    const socketId = socket.id;
-   const hookId = (socket.handshake.query as any).hookId as string;
+   const hookId = socket.handshake.query['hookId'] as string;
    if (!hookId) { throw new Error('Request did not have a hookId'); }
    logger.info('Socket {socketId} connected for hook {hookId}', { socketId, hookId });
    socket.join(hookId);
-
-   logger.debug('Verifying that hook {hookId} exists', { hookId });
-   getHook(hookId).then(h => {
-      if (h) { return; }
-      logger.warn('Disconnecting socket {socketId} because the hook {hookId} did not exist', { socketId, hookId });
-      socket.emit('not-found', 'Given hook did not exist, disconnecting');
-      socket.disconnect();
-   });
 
    socket.on('disconnect', () => logger.info('Socket {socketId} disconnected', { socketId }));
 }

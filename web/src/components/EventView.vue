@@ -127,11 +127,13 @@
 
             if (!contentType.value) { return BodyViewers.Default; }
 
-            if (contentType.value.toLowerCase().startsWith('multipart/form-data')) { return BodyViewers.MultipartFormData; }
+            const lowerContentType = contentType.value.toLowerCase();
 
-            if (contentType.value === 'application/json') { return BodyViewers.JsonBody; }
+            if (lowerContentType.match(/multipart.form-data/)) { return BodyViewers.MultipartFormData; }
 
-            if (contentType.value === 'application/x-www-form-urlencoded') { return BodyViewers.FormUrlEncoded; }
+            if (lowerContentType.match(/application.json/)) { return BodyViewers.JsonBody; }
+
+            if (lowerContentType.match(/application.x-www-form-urlencoded/)) { return BodyViewers.FormUrlEncoded; }
 
             return BodyViewers.Default;
 

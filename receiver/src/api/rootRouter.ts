@@ -6,6 +6,7 @@ import authRouter from './authRouter';
 import { getTokenUser } from '@/services/persistence/userStore';
 import { HeRequest } from './HeRequest';
 import { createLogger } from '@/services/logger';
+import { verifyAuthorizationHeader } from '@/services/verifyAuthorization';
 
 const router = Router();
 
@@ -20,27 +21,18 @@ router.use(async (req: HeRequest, res, next) => {
       return;
    }
 
-   const parts = auth.split(' ');
-   if (parts.length !== 2) {
-      res.status(401).send('Malformed authorization header');
+   try {
+      const user = await verifyAuthorizationHeader(auth);
+
+      log.debug('Authenticated user {userId}', { userId: user.id });
+
+      req.user = user;
+
+   } catch (e) {
+      log.warn('Failed authorization verification - {errorMessage}', { errorMessage: e });
+      res.status(401).send(e);
       return;
    }
-
-   if (parts[0].toLocaleLowerCase() !== 'bearer') {
-      res.send(401).send('Invalid authorization schema');
-      return;
-   }
-
-   const user = await getTokenUser(parts[1]);
-
-   if (!user) {
-      res.send(401).send('Invalid authorization');
-      return;
-   }
-
-   log.debug('Authenticated user {userId}', { userId: user.id });
-
-   req.user = user;
 
    next();
 
