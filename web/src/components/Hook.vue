@@ -99,7 +99,7 @@
 </template>
 
 <script lang="ts">
-   import { useApiToken } from '@/services/apiToken';
+   import { useApiToken } from '@/services/loginService';
    import { useApiClient } from '@/services/useApiClient';
    import { useHookAddress } from '@/services/useHookAddress';
    import type { EventDataSlim, Hook } from 'hook-events';

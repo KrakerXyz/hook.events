@@ -1,6 +1,6 @@
 import { ApiClient } from 'hook-events';
 import { v4 } from 'uuid';
-import { useApiToken } from './apiToken';
+import { useApiToken } from './loginService';
 
 let client: ApiClient;
 export function useApiClient(): ApiClient {

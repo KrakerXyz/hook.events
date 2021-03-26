@@ -1,96 +1,127 @@
 import { GoogleToken } from 'hook-events';
-import { setApiToken, useApiToken } from './apiToken';
+import { nextTick, ref } from 'vue';
 import { useApiClient } from './useApiClient';
 
-let loginService: LoginService | null = null;
+let user: gapi.auth2.GoogleUser | null = null;
+const apiToken = ref<string | null>(null);
+const avatarUrl = ref<string | null>(null);
+const loginStatus = ref<'signedOut' | 'initializing' | 'signedIn'>('initializing');
 
-export function useLoginService(): LoginService {
-   if (!loginService) { loginService = new LoginService(); }
-   return loginService;
-}
+function init(): Promise<void> {
 
-class LoginService {
+   return new Promise<void>(r => {
 
-   //We have gapi listed in tsconfig and the typings are present but vetur is still complaining.
-   /* eslint-disable no-undef */
-
-   private _initPromise: Promise<gapi.auth2.GoogleAuth> | null = null;
-   private readonly _apiToken = useApiToken();
-
-   private init() {
-      if (this._initPromise) { return this._initPromise; }
-      this._initPromise = new Promise<gapi.auth2.GoogleAuth>(r => {
-         const client_id = process.env['VUE_APP_GOOGLE_CLIENT_ID'];
-         gapi.load('auth2', () => {
-
-            const auth2 = gapi.auth2.init({
-               client_id,
-               cookie_policy: 'single_host_origin',
-               fetch_basic_profile: true
-            });
-
-            auth2.isSignedIn.listen(isSignedIn => {
-               if (!isSignedIn) { return; }
-               const googleUser = auth2.currentUser.get();
-               this.verifyToken(googleUser, auth2);
-            });
-
-            r(auth2);
-         });
-      });
-   }
-
-   private async verifyToken(googleUser: gapi.auth2.GoogleUser, auth2: gapi.auth2.GoogleAuth): Promise<gapi.auth2.GoogleUser> {
-
-      const authResponse = googleUser.getAuthResponse();
-
-      const googleToken: GoogleToken = {
-         idToken: authResponse.id_token
-      };
-
-      try {
-
-         const apiClient = useApiClient();
-         const apiToken = await apiClient.getTokenFromGoogle(googleToken);
-
-         setApiToken(apiToken.token);
-
-         return googleUser;
-
-      } catch {
-         auth2.signOut();
-         throw new Error('Error validating token');
-      }
-   }
-
-   public get isSignedIn() { return !!this._apiToken.value; }
-
-   /*
-   gapi.load('auth2', function () {
-      // Retrieve the singleton for the GoogleAuth library and set up the client.
       const client_id = process.env['VUE_APP_GOOGLE_CLIENT_ID'];
+      loginStatus.value = 'initializing';
+      gapi.load('auth2', () => {
+         gapi.auth2.init({
+            client_id,
+            cookie_policy: 'single_host_origin',
+            fetch_basic_profile: true
+         }).then(
+            auth2 => {
 
-      const auth2 = gapi.auth2.init({
-         client_id,
-         cookie_policy: 'single_host_origin',
-         fetch_basic_profile: true
+               if (auth2.isSignedIn.get()) {
+                  const googleUser = auth2.currentUser.get();
+                  verifyToken(googleUser, auth2)
+                     .then(u => user = u)
+                     .finally(() => r());
+               } else {
+                  loginStatus.value = 'signedOut';
+                  r();
+               }
+
+            },
+            e => {
+               console.debug('Failed to initialize gapi', e);
+               loginStatus.value = 'signedOut';
+               r();
+            }
+         );
+
       });
-
-      auth2.isSignedIn.listen(isSignedIn => {
-         if (!isSignedIn) { return; }
-         const googleUser = auth2.currentUser.get();
-         verifyToken(googleUser, auth2);
-      });
-
-      auth2.attachClickHandler(
-         document.getElementById('btn-google'),
-         {},
-         () => ({}), //This is for a success callback but we don't need it because the isSignedIn listener will catch it
-         reason => {
-            console.log('google-signin-failed', reason);
-         }
-      );
 
    });
-*/
+}
+
+async function verifyToken(googleUser: gapi.auth2.GoogleUser, auth2: gapi.auth2.GoogleAuth): Promise<gapi.auth2.GoogleUser> {
+
+   const authResponse = googleUser.getAuthResponse();
+
+   const googleToken: GoogleToken = {
+      idToken: authResponse.id_token
+   };
+
+   try {
+
+      const apiClient = useApiClient();
+      const newApiToken = await apiClient.getTokenFromGoogle(googleToken);
+
+      apiToken.value = newApiToken.token;
+      avatarUrl.value = googleUser.getBasicProfile().getImageUrl();
+      loginStatus.value = 'signedIn';
+
+      return googleUser;
+
+   } catch {
+      auth2.signOut();
+      throw new Error('Error validating token');
+   }
+}
+
+let intiProm: Promise<void> = init();
+
+async function signIn(): Promise<void> {
+   await intiProm;
+   if (user) { return; }
+   const auth2 = gapi.auth2.getAuthInstance();
+
+   loginStatus.value = 'initializing';
+   return new Promise<void>(r => {
+      auth2.signIn().then(
+         googleUser => {
+            verifyToken(googleUser, auth2)
+               .then(u => user = u)
+               .finally(() => r());
+         },
+         () => {
+            console.debug('Signin canceled');
+            loginStatus.value = 'signedOut';
+            r();
+         }
+      );
+   });
+}
+
+async function signOut() {
+   await intiProm;
+   if (!user) { return; }
+   loginStatus.value = 'initializing';
+   const auth2 = gapi.auth2.getAuthInstance();
+   auth2.signOut().then(() => {
+      user = null;
+      avatarUrl.value = null;
+      apiToken.value = null;
+      loginStatus.value = 'signedOut';
+      intiProm = init();
+   });
+}
+
+export function useLoginService() {
+   return {
+      signIn,
+      signOut
+   };
+}
+
+export function useApiToken() {
+   return apiToken;
+}
+
+export function useAvatarUrl() {
+   return avatarUrl;
+}
+
+export function useLoginStatus() {
+   return loginStatus;
 }

@@ -1,32 +1,32 @@
 
 <template>
    <button
-      v-if="!user"
-      id="btn-google"
+      v-if="status === 'signedOut'"
       class="btn btn-link nav-link"
+      @click="signIn()"
    >Sign In/Up</button>
 
    <!-- I tried putting the v-if on the spinner but we get a vue error. It should work. Seems like a legitimate bug with vue at the time (3/19/2021). Try again later -->
    <div
       class="nav-link"
-      v-if="user && user.status === 'loading'"
+      v-if="status === 'initializing'"
    >
       <v-spinner class="loading text-white"></v-spinner>
    </div>
 
    <div
       class="user-menu position-relative"
-      v-if="user && user.status === 'loaded'"
+      v-if="avatarUrl && status==='signedIn'"
    >
       <img
-         :src="user.avatarUrl"
+         :src="avatarUrl"
          alt="Signed In"
       >
 
       <ul class="d-none position-absolute list-group">
          <button
             class="list-group-item list-group-item-action"
-            @click="signout()"
+            @click="signOut()"
          >
             Sign out
          </button>
@@ -36,101 +36,20 @@
 
 <script lang="ts">
 
-   import { useApiClient } from '@/services/useApiClient';
-   import { defineComponent, nextTick, onMounted, ref } from 'vue';
-   import type { GoogleToken } from 'hook-events';
-   import { setApiToken } from '@/services/apiToken';
-
-   //We have gapi listed in tsconfig and the typings are present but vetur is still complaining.
-   /* eslint-disable no-undef */
+   import { useAvatarUrl, useLoginService, useLoginStatus } from '@/services/loginService';
+   import { defineComponent } from 'vue';
 
    export default defineComponent({
       setup() {
 
-         const user = ref<User | null>(null);
+         const loginService = useLoginService();
+         const avatarUrl = useAvatarUrl();
+         const status = useLoginStatus();
 
-         const apiClient = useApiClient();
-
-         const verifyToken = async (googleUser: gapi.auth2.GoogleUser, auth2: gapi.auth2.GoogleAuth): Promise<void> => {
-
-            user.value = {
-               status: 'loading',
-               avatarUrl: null
-            };
-
-            const authResponse = googleUser.getAuthResponse();
-
-            const googleToken: GoogleToken = {
-               idToken: authResponse.id_token
-            };
-
-            try {
-
-               const apiToken = await apiClient.getTokenFromGoogle(googleToken);
-
-               const profile = googleUser.getBasicProfile();
-
-               user.value = {
-                  status: 'loaded',
-                  avatarUrl: profile.getImageUrl()
-               };
-
-               setApiToken(apiToken.token);
-
-            } catch {
-               auth2.signOut();
-               user.value = null;
-            }
-         };
-
-         const initGoogle = () => {
-            gapi.load('auth2', function () {
-               // Retrieve the singleton for the GoogleAuth library and set up the client.
-               const client_id = process.env['VUE_APP_GOOGLE_CLIENT_ID'];
-
-               const auth2 = gapi.auth2.init({
-                  client_id,
-                  cookie_policy: 'single_host_origin',
-                  fetch_basic_profile: true
-               });
-
-               auth2.isSignedIn.listen(isSignedIn => {
-                  if (!isSignedIn) { return; }
-                  const googleUser = auth2.currentUser.get();
-                  verifyToken(googleUser, auth2);
-               });
-
-               auth2.attachClickHandler(
-                  document.getElementById('btn-google'),
-                  {},
-                  () => ({}), //This is for a success callback but we don't need it because the isSignedIn listener will catch it
-                  reason => {
-                     console.log('google-signin-failed', reason);
-                  }
-               );
-
-            });
-         };
-
-         onMounted(() => {
-            initGoogle();
-         });
-
-         const signout = () => {
-            gapi.auth2.getAuthInstance()?.signOut();
-            user.value = null;
-            setApiToken(null);
-            nextTick(() => initGoogle());
-         };
-
-         return { user, signout };
+         return { signIn: loginService.signIn, signOut: loginService.signOut, avatarUrl, status };
       }
    });
 
-   interface User {
-      status: 'loading' | 'loaded';
-      avatarUrl: string | null;
-   }
 
 </script>
 
@@ -147,9 +66,5 @@
          right: 0;
          white-space: nowrap;
       }
-   }
-
-   .loading {
-      font-size: 2rem;
    }
 </style>

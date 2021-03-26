@@ -45,27 +45,27 @@
             <h4 class="d-inline">
                Private hooks
             </h4>
+
             <span
                role="button"
-               v-if="!isSignedIn"
+               v-if="loginStatus === 'signedOut'"
                class="btn-link"
+               @click="signIn()"
             >Sign in with Google</span>
+
+            <span v-if="loginStatus === 'initializing'">
+               <v-spinner class="loading"></v-spinner>
+            </span>
+
             <div class="list-group mt-2">
+               <template v-if="loginStatus !== 'signedIn'">
+                  <div class="list-group-item list-group-item-secondary">Sign In/Up to create private hooks - Hooks only you can access</div>
+                  <div class="list-group-item list-group-item-secondary">Organize your hooks by giving them friendly names and descriptions</div>
+                  <div class="list-group-item list-group-item-secondary">Delete your hooks and all data they received</div>
+               </template>
                <div
                   class="list-group-item list-group-item-secondary"
-                  v-if="!isSignedIn"
-               >Sign In/Up to create private hooks - Hooks only you can access</div>
-               <div
-                  class="list-group-item list-group-item-secondary"
-                  v-if="!isSignedIn"
-               >Organize your hooks by giving them friendly names and descriptions</div>
-               <div
-                  class="list-group-item list-group-item-secondary"
-                  v-if="!isSignedIn"
-               >Delete your hooks and all data they received</div>
-               <div
-                  class="list-group-item list-group-item-secondary"
-                  v-if="isSignedIn && !privateHooks.length"
+                  v-if="loginStatus === 'signedIn' && !privateHooks.length"
                >
                   You do not have any private hooks. <span
                      role="button"
@@ -95,12 +95,12 @@
 </template>
 
 <script lang="ts">
-   import { computed, defineComponent, ref, watch } from 'vue';
+   import { defineComponent, ref, watch } from 'vue';
    import { useApiClient } from '@/services/useApiClient';
    import { useRouter } from 'vue-router';
    import { useHookStore } from '@/services/useHookStore';
-   import { useApiToken } from '@/services/apiToken';
    import { Hook } from 'hook-events';
+   import { useLoginService, useLoginStatus } from '@/services/loginService';
 
    export default defineComponent({
       props: {},
@@ -111,7 +111,8 @@
 
          const hookStore = useHookStore();
 
-         const isSignedIn = computed(() => !!apiToken.value);
+         const loginService = useLoginService();
+         const loginStatus = useLoginStatus();
 
          const createHook = async () => {
             const hook = await apiClient.createHook();
@@ -119,21 +120,19 @@
             router.push({ name: 'hook', params: { hookId: hook.id } });
          };
 
-         const apiToken = useApiToken();
-
          const hooks = [...hookStore.hooks].filter(h => !h.ownerId).sort((a, b) => b.created - a.created);
 
          const privateHooks = ref<Hook[]>([]);
 
-         watch(isSignedIn, () => {
-            if (isSignedIn.value) {
+         watch(loginStatus, () => {
+            if (loginStatus.value === 'signedIn') {
                apiClient.getHooks().then(h => privateHooks.value = [...h].sort((a, b) => b.created - a.created));
             } else if (privateHooks.value.length) {
                privateHooks.value = [];
             }
          }, { immediate: true });
 
-         return { createHook, hooks, isSignedIn, privateHooks };
+         return { createHook, hooks, loginStatus, privateHooks, signIn: loginService.signIn };
       },
    });
 </script>
