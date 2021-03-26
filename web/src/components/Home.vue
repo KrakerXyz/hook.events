@@ -42,12 +42,27 @@
 
       <div class="row">
          <div class="col">
-            <h4>Private hooks</h4>
-            <div class="list-group">
+            <h4 class="d-inline">
+               Private hooks
+            </h4>
+            <span
+               role="button"
+               v-if="!isSignedIn"
+               class="btn-link"
+            >Sign in with Google</span>
+            <div class="list-group mt-2">
                <div
                   class="list-group-item list-group-item-secondary"
                   v-if="!isSignedIn"
-               >Sign In/Up to create private hooks</div>
+               >Sign In/Up to create private hooks - Hooks only you can access</div>
+               <div
+                  class="list-group-item list-group-item-secondary"
+                  v-if="!isSignedIn"
+               >Organize your hooks by giving them friendly names and descriptions</div>
+               <div
+                  class="list-group-item list-group-item-secondary"
+                  v-if="!isSignedIn"
+               >Delete your hooks and all data they received</div>
                <div
                   class="list-group-item list-group-item-secondary"
                   v-if="isSignedIn && !privateHooks.length"
