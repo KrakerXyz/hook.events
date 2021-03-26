@@ -1,5 +1,12 @@
 import Axios, { AxiosInstance } from 'axios';
-import type { EventDataSlim, Hook, GoogleToken, ApiToken } from '../types';
+import type { EventDataSlim, Hook, GoogleToken, ApiToken, HookUpdate } from '../types';
+
+type Impossible<K extends keyof any> = {
+   [P in K]: never;
+};
+
+type Strict<T, U extends T = T> = U & Impossible<Exclude<keyof U, keyof T>>;
+
 
 /** A client for interacting the the hook.events REST API */
 export class ApiClient {
@@ -53,6 +60,13 @@ export class ApiClient {
    /** Create a new hook */
    public async createHook(): Promise<Hook> {
       return this._axios.post<Hook>('hooks').then(r => {
+         return r.data;
+      });
+   }
+
+   /** Updates properties of a hook */
+   public async updateHook<T extends HookUpdate>(id: string, hook: Strict<HookUpdate, T>): Promise<Hook> {
+      return this._axios.put<Hook>(`hooks/${id}`, hook).then(r => {
          return r.data;
       });
    }

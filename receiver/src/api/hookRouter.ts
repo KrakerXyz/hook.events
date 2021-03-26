@@ -2,10 +2,10 @@
 import { createLogger } from '@/services/logger';
 import { newHookId } from '@/services/newHookId';
 import { getEventsForHook } from '@/services/persistence/eventDataStore';
-import { addHook, getHook, getHooks } from '@/services/persistence/hookStore';
+import { addHook, getHook, getHooks, updateHook } from '@/services/persistence/hookStore';
 import { json, RequestHandler } from 'express';
 import { Router } from 'express';
-import { Hook } from 'hook-events';
+import { Hook, HookUpdate } from 'hook-events';
 import { HeRequest } from './HeRequest';
 
 const hookRouter = Router();
@@ -64,6 +64,48 @@ const post: RequestHandler = async (req: HeRequest, res): Promise<void> => {
    res.send(hook);
 };
 hookRouter.post('/', json(), post);
+
+const put: RequestHandler = async (req: HeRequest, res): Promise<void> => {
+
+   if (!req.user) {
+      res.status(400).send('Authorization is required to perform hook updates');
+      return;
+   }
+
+   const hookId = req.params['hookId'];
+   if (!hookId) {
+      res.status(400).send('hookId not found');
+      return;
+   }
+
+   const hook = await getHook(hookId);
+   if (!hook) {
+      res.status(404).send('Hook does not exist');
+      return;
+   }
+
+   if (!hook.ownerId) {
+      res.send(400).send('Only private hooks can be updated');
+      return;
+   }
+
+   if (hook.ownerId !== req.user?.id) {
+      res.status(403).send('Access denied to private hook');
+      log.warn('Access to hook {hookId} events denied (403) to user {userId}', { hookId, userId: req.user?.id ?? 'anon' });
+      return;
+   }
+
+   const hookUpdate: HookUpdate = req.body;
+   const hookUpdateClean: HookUpdate = { description: hookUpdate.description, name: hookUpdate.name };
+
+   await updateHook(hookId, hookUpdateClean);
+
+   const newHook = { ...hook, hookUpdateClean };
+
+   res.send(200).send(newHook);
+
+};
+hookRouter.put('/:hookId', json(), put);
 
 const getEvents: RequestHandler = async (req: HeRequest, res): Promise<void> => {
    const hookId = req.params['hookId'];

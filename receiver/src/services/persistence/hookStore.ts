@@ -1,5 +1,5 @@
 
-import { Hook } from 'hook-events';
+import { Hook, HookUpdate } from 'hook-events';
 import { performance } from 'perf_hooks';
 import { createLogger } from '../logger';
 import mongoose from 'mongoose';
@@ -36,5 +36,13 @@ export async function addHook(hook: Hook): Promise<void> {
    const startTime = performance.now();
    await hookModel.save();
    logger.debug('Saved hook {hookId} to db in {elapsed}ms', { hookId: hook.id, elapsed: performance.now() - startTime });
+
+}
+
+export async function updateHook(hookId: string, hook: HookUpdate): Promise<void> {
+
+   const startTime = performance.now();
+   await HookModel.findOneAndUpdate({ id: hookId }, hook);
+   logger.debug('Updated hook {hookId} to db in {elapsed}ms', { hookId: hookId, elapsed: performance.now() - startTime });
 
 }
