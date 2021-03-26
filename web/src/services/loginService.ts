@@ -1,5 +1,5 @@
 import { GoogleToken } from 'hook-events';
-import { nextTick, ref } from 'vue';
+import { ref } from 'vue';
 import { useApiClient } from './useApiClient';
 
 let user: gapi.auth2.GoogleUser | null = null;
