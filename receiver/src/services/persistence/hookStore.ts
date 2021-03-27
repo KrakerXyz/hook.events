@@ -12,6 +12,7 @@ const HookModel = mongoose.model('hook', new mongoose.Schema({
    id: String,
    created: Number,
    description: String,
+   name: String,
    ownerId: String
 }));
 
