@@ -1,5 +1,5 @@
 import Axios, { AxiosInstance } from 'axios';
-import type { EventDataSlim, Hook, GoogleToken, ApiToken, HookUpdate } from '../types';
+import type { EventDataSlim, Hook, GoogleToken, ApiToken, HookUpdate } from '..';
 
 type Impossible<K extends keyof any> = {
    [P in K]: never;

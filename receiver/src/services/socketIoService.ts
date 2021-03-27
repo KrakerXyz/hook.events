@@ -1,4 +1,4 @@
-import type { EventData } from 'hook-events';
+import { Connection, ConnectionType, EventData } from 'hook-events';
 import { Server } from 'http';
 
 import io from 'socket.io';
@@ -9,6 +9,9 @@ import { verifyAuthorizationHeader } from './verifyAuthorization';
 let ioServer: io.Server | null = null;
 
 const logger = createLogger('socketIoService');
+
+type HookId = string;
+const connections: Map<HookId, io.Socket[]> = new Map();
 
 export function ioSetup(server: Server): void {
 
@@ -70,10 +73,41 @@ function clientConnected(socket: io.Socket): void {
    const socketId = socket.id;
    const hookId = socket.handshake.query['hookId'] as string;
    if (!hookId) { throw new Error('Request did not have a hookId'); }
+
+   let hookSockets = connections.get(hookId);
+   if (!hookSockets) { connections.set(hookId, hookSockets = []); }
+
+   hookSockets.push(socket);
+
    logger.info('Socket {socketId} connected for hook {hookId}', { socketId, hookId });
    socket.join(hookId);
 
-   socket.on('disconnect', () => logger.info('Socket {socketId} disconnected', { socketId }));
+   const connection: Connection = {
+      clientId: socket.handshake.query['he-client-id'] as string | undefined ?? null,
+      type: ConnectionType.Connected
+   };
+
+   ioServer!.to(hookId).emit('connection', connection);
+
+   socket.on('disconnect', () => {
+
+      const hookSockets = connections.get(hookId);
+      if (!hookSockets) { throw new Error(`Connection array did not exist for ${hookId}`); }
+
+      const socketIndex = hookSockets.indexOf(socket);
+      if (socketIndex === -1) { throw new Error(`Couldn't find socket that was being disconnected withing connections for hookId ${hookId}`); }
+
+      hookSockets.splice(socketIndex, 1);
+      if (socketIndex === 0) { connections.delete(hookId); }
+
+      const connection: Connection = {
+         clientId: socket.handshake.query['he-client-id'] as string | undefined ?? null,
+         type: ConnectionType.Disconnected
+      };
+
+      ioServer!.to(hookId).emit('connection', connection);
+      logger.info('Socket {socketId} disconnected', { socketId });
+   });
 }
 
 export function ioEmit(eventData: EventData): void {

@@ -175,6 +175,8 @@
 
          const apiToken = useApiToken();
 
+         const receiverClientId = 'https://hook.events';
+
          watch(hookRef, h => {
 
             if (!h) {
@@ -184,7 +186,8 @@
             }
 
             receiver = new ReceiverClient(useHookAddress(props.hookId), {
-               apiToken: () => apiToken.value
+               apiToken: () => apiToken.value,
+               clientId: receiverClientId
             });
 
             receiver.onEvent(e => {

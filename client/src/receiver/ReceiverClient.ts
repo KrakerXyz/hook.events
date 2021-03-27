@@ -1,11 +1,14 @@
-import { EventData } from './waitForEvent';
+
 import { io } from 'socket.io-client';
 import { Socket } from 'socket.io-client/build/socket';
+import { EventData } from '.';
 import { Subscription } from './subscription';
+import { Connection } from './types';
 
 export { Subscription };
 
-export type Listener = (event: EventData) => Promise<void> | void;
+export type EventListener = (event: EventData) => Promise<void> | void;
+export type ConnectionListener = (connection: Connection) => Promise<void> | void;
 
 /** A client for connecting to and receiving inbound events from a hook */
 export class ReceiverClient {
@@ -41,7 +44,8 @@ export class ReceiverClient {
       }
    }
 
-   private readonly _eventListeners: Listener[] = [];
+   private readonly _eventListeners: EventListener[] = [];
+   private readonly _connectionListeners: ConnectionListener[] = [];
 
    private _disposed = false;
 
@@ -76,16 +80,17 @@ export class ReceiverClient {
       //If we don't have a socket, create one
       if (!this._socket) {
 
-         const headers: Record<string, string> = {};
+         const query: Record<string, string> = {
+            hookId: this._hookId,
+         };
 
          const clientId = await this.resolveValueProvider(this._options.clientId);
-         if (clientId) { headers['he-client-id'] = clientId; }
+         if (clientId) { query['he-client-id'] = clientId; }
 
          this._socket = io(`${this._scheme}://${this._host}`, {
             transports: ['websocket'],
-            query: { hookId: this._hookId },
+            query,
             path: '/b1cb9b4abce54cd8add7e0ad9be94e4b',
-            extraHeaders: headers,
             withCredentials: true,
             auth: async (cb) => {
                const authValue = await this.resolveValueProvider(this._options.apiToken);
@@ -99,8 +104,15 @@ export class ReceiverClient {
                });
             }
          });
+
          this._socket.on('event', async (e: EventData) => {
             for (const l of this._eventListeners) {
+               await Promise.resolve(l(e));
+            }
+         });
+
+         this._socket.on('connection', async (e: Connection) => {
+            for (const l of this._connectionListeners) {
                await Promise.resolve(l(e));
             }
          });
@@ -120,7 +132,7 @@ export class ReceiverClient {
     * Add a listener to be invoked when events come in. Returns a promise that resolves when the connection is activated. A subscription is returned from the promise that can be used to remove the listener when events are no longer needed.
     * @param listener - The callback to be invoked when a new event comes in.
     */
-   public async onEvent(listener: Listener): Promise<Subscription> {
+   public async onEvent(listener: EventListener): Promise<Subscription> {
       this._eventListeners.push(listener);
       await this.checkConnection();
       return {
@@ -128,6 +140,18 @@ export class ReceiverClient {
             const i = this._eventListeners.indexOf(listener);
             console.assert(i !== -1);
             this._eventListeners.splice(i, 1);
+         }
+      };
+   }
+
+   public async onConnection(listener: ConnectionListener): Promise<Subscription> {
+      this._connectionListeners.push(listener);
+      await this.checkConnection();
+      return {
+         unsubscribe: () => {
+            const i = this._connectionListeners.indexOf(listener);
+            console.assert(i !== -1);
+            this._connectionListeners.splice(i, 1);
          }
       };
    }
