@@ -5,7 +5,7 @@
       :class="{'show': show }"
       @click.self="shadowClick"
    >
-      <div class="modal-content-x container-fluid p-4 shadow bg-white border rounded position-absolute col-sm-10 col-lg-8">
+      <div class="modal-content-x container-fluid p-4 shadow bg-white border rounded position-absolute col-sm-10 col-lg-6">
          <slot></slot>
       </div>
    </div>
