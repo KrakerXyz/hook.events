@@ -100,9 +100,9 @@ const put: RequestHandler = async (req: HeRequest, res): Promise<void> => {
 
    await updateHook(hookId, hookUpdateClean);
 
-   const newHook = { ...hook, hookUpdateClean };
+   const newHook = { ...hook, ...hookUpdateClean };
 
-   res.send(200).send(newHook);
+   res.status(200).send(newHook);
 
 };
 hookRouter.put('/:hookId', json(), put);

@@ -200,5 +200,6 @@ mongoose.connect(getRequiredConfig(EnvKey.COSMOSDB_CONNECTION_STRING),
    {
       dbName: 'hook-events',
       useNewUrlParser: true,
-      useUnifiedTopology: true
+      useUnifiedTopology: true,
+      useFindAndModify: false,
    }).then(() => console.log('Mongoose connection successfull'));

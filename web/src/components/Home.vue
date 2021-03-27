@@ -33,8 +33,20 @@
                   :to="{name: 'hook', params: { hookId: h.id}}"
                   class="list-group-item list-group-item-action"
                >
-                  {{h.id}}
-                  <small class="text-muted ms-5">{{new Date(h.created).toLocaleString()}}</small>
+                  <div class="row">
+                     <div class="col">
+                        <h5>{{h.id}}</h5>
+                     </div>
+                     <div class="col-auto">
+                        <small class="text-muted ms-5">{{new Date(h.created).toLocaleString()}}</small>
+                        <div class="text-end">
+                           <button
+                              class="btn btn-link text-danger"
+                              @click.prevent="removePublic(h)"
+                           >Remove from list</button>
+                        </div>
+                     </div>
+                  </div>
                </router-link>
             </div>
          </div>
@@ -73,20 +85,32 @@
                      @click="createHook()"
                   >Create one</span>
                </div>
-               <div
-                  v-for="hook of privateHooks"
-                  :key="hook.id"
+               <router-link
+                  v-for="h of privateHooks"
+                  :key="h.id"
+                  :to="{name: 'hook', params: { hookId: h.id}}"
+                  class="list-group-item list-group-item-action"
                >
-                  <router-link
-                     v-for="h of privateHooks"
-                     :key="h.id"
-                     :to="{name: 'hook', params: { hookId: h.id}}"
-                     class="list-group-item list-group-item-action"
-                  >
-                     {{h.id}}
-                     <small class="text-muted ms-5">{{new Date(h.created).toLocaleString()}}</small>
-                  </router-link>
-               </div>
+                  <div class="row">
+                     <div class="col">
+                        <h5>
+                           {{ h.name || h.id}}
+                           <small
+                              v-if="h.name"
+                              class="ms-2 text-muted"
+                           >
+                              ({{h.id}})
+                           </small>
+                        </h5>
+                        <div v-if="h.description">
+                           {{h.description}}
+                        </div>
+                     </div>
+                     <div class="col-auto">
+                        <small class="text-muted ms-5">{{new Date(h.created).toLocaleString()}}</small>
+                     </div>
+                  </div>
+               </router-link>
             </div>
          </div>
       </div>
@@ -120,19 +144,29 @@
             router.push({ name: 'hook', params: { hookId: hook.id } });
          };
 
-         const hooks = [...hookStore.hooks].filter(h => !h.ownerId).sort((a, b) => b.created - a.created);
+         const hooks = ref([...hookStore.hooks].filter(h => !h.ownerId).sort((a, b) => b.created - a.created));
+
+         const removePublic = (hook: Hook) => {
+            const index = hooks.value.findIndex(h => h.id === hook.id);
+            hookStore.removeHookId(hook.id);
+            const newList = [...hooks.value];
+            newList.splice(index, 1);
+            hooks.value = newList;
+         };
 
          const privateHooks = ref<Hook[]>([]);
 
          watch(loginStatus, () => {
             if (loginStatus.value === 'signedIn') {
-               apiClient.getHooks().then(h => privateHooks.value = [...h].sort((a, b) => b.created - a.created));
+               apiClient.getHooks().then(h => {
+                  privateHooks.value = [...h].sort((a, b) => b.created - a.created);
+               });
             } else if (privateHooks.value.length) {
                privateHooks.value = [];
             }
          }, { immediate: true });
 
-         return { createHook, hooks, loginStatus, privateHooks, signIn: loginService.signIn };
+         return { createHook, hooks, loginStatus, privateHooks, signIn: loginService.signIn, removePublic };
       },
    });
 </script>

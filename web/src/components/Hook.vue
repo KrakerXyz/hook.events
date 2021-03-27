@@ -104,7 +104,11 @@
          v-if="hook && showConfig"
          @close="showConfig = false"
       >
-         <hook-config :hook="hook"></hook-config>
+         <hook-config
+            :hook="hook"
+            @close="showConfig = false"
+            @update="updateHook($event)"
+         ></hook-config>
       </v-modal>
 
    </div>
@@ -116,13 +120,14 @@
    import { useHookAddress } from '@/services/useHookAddress';
    import type { EventDataSlim, Hook } from 'hook-events';
    import { ReceiverClient } from 'hook-events';
-   import { computed, defineComponent, onUnmounted, ref, watch } from 'vue';
+   import { computed, defineComponent, onUnmounted, reactive, ref, watch } from 'vue';
    import { useRoute, useRouter } from 'vue-router';
    import type { EventDataVm } from './EventDataVm';
    import EventListItem from './EventListItem.vue';
    import EventView from './EventView.vue';
    import HookEmpty from './HookEmpty.vue';
    import HookConfig from './HookConfig.vue';
+   import { deepClone } from '@/services/deepClone';
 
    export default defineComponent({
       components: {
@@ -156,7 +161,8 @@
             apiClient
                .getHook(props.hookId)
                .then(h => {
-                  hookRef.value = h;
+                  //We clone and make reactive because the update handler from the config modal does an Object.assign into it
+                  hookRef.value = reactive(deepClone(h));
                   isUnauthorized.value = false;
                })
                .catch(e => {
@@ -237,7 +243,11 @@
 
          const showConfig = ref(false);
 
-         return { events, hookAddress, selectedEventId, selectedEvent, deleteEvent, isUnauthorized, isSignedIn, showConfig, hook: hookRef };
+         const updateHook = (dirtyHook: Hook) => {
+            Object.assign(hookRef.value, dirtyHook);
+         };
+
+         return { events, hookAddress, selectedEventId, selectedEvent, deleteEvent, isUnauthorized, isSignedIn, showConfig, hook: hookRef, updateHook };
       }
    });
 </script>
