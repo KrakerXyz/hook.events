@@ -37,7 +37,6 @@
       <div class="flex-grow-1 overflow-auto">
          <router-view></router-view>
       </div>
-
    </div>
 </template>
 

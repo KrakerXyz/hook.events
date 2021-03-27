@@ -15,6 +15,11 @@
                :text="hookAddress"
                class="text-light"
             ></v-button-copy>
+            <v-button-config
+               v-if="hook && hook.ownerId"
+               class="text-light"
+               @click="showConfig = true"
+            ></v-button-config>
          </div>
       </teleport>
 
@@ -95,11 +100,18 @@
 
       </div>
 
+      <v-modal
+         v-if="hook && showConfig"
+         @close="showConfig = false"
+      >
+         <hook-config :hook="hook"></hook-config>
+      </v-modal>
+
    </div>
 </template>
 
 <script lang="ts">
-   import { useApiToken } from '@/services/loginService';
+   import { useApiToken, useLoginStatus } from '@/services/loginService';
    import { useApiClient } from '@/services/useApiClient';
    import { useHookAddress } from '@/services/useHookAddress';
    import type { EventDataSlim, Hook } from 'hook-events';
@@ -110,12 +122,14 @@
    import EventListItem from './EventListItem.vue';
    import EventView from './EventView.vue';
    import HookEmpty from './HookEmpty.vue';
+   import HookConfig from './HookConfig.vue';
 
    export default defineComponent({
       components: {
          EventListItem,
          HookEmpty,
-         EventView
+         EventView,
+         HookConfig
       },
       props: {
          hookId: { type: String, required: true }
@@ -130,12 +144,15 @@
          const hookRef = ref<Hook | null>(null);
          const isUnauthorized = ref(false);
 
-         const apiToken = useApiToken();
-         const isSignedIn = computed(() => !!apiToken.value);
+         const loginStatus = useLoginStatus();
+         const isSignedIn = computed(() => loginStatus.value === 'signedIn');
 
          const apiClient = useApiClient();
 
-         watch(apiToken, () => {
+         watch(loginStatus, () => {
+
+            if (loginStatus.value === 'initializing') { return; }
+
             apiClient
                .getHook(props.hookId)
                .then(h => {
@@ -155,6 +172,8 @@
          //Used to require at least 400ms loading time to prevent flickering
          const startTime = Date.now();
          const minLoadTime = 500;
+
+         const apiToken = useApiToken();
 
          watch(hookRef, h => {
 
@@ -216,7 +235,9 @@
             receiver?.dispose();
          });
 
-         return { events, hookAddress, selectedEventId, selectedEvent, deleteEvent, isUnauthorized, isSignedIn };
+         const showConfig = ref(false);
+
+         return { events, hookAddress, selectedEventId, selectedEvent, deleteEvent, isUnauthorized, isSignedIn, showConfig, hook: hookRef };
       }
    });
 </script>
