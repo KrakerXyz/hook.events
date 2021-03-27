@@ -46,3 +46,10 @@ export async function updateHook(hookId: string, hook: HookUpdate): Promise<void
    logger.debug('Updated hook {hookId} to db in {elapsed}ms', { hookId: hookId, elapsed: performance.now() - startTime });
 
 }
+
+export async function deleteHook(hookId: string): Promise<void> {
+   const startTime = performance.now();
+   await HookModel.deleteOne({ id: hookId });
+   logger.debug('Deleted hook {hookId} to db in {elapsed}ms', { hookId: hookId, elapsed: performance.now() - startTime });
+
+}

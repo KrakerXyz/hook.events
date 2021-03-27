@@ -65,7 +65,7 @@
                </template>
                <div
                   class="list-group-item list-group-item-secondary"
-                  v-if="loginStatus === 'signedIn' && !privateHooks.length"
+                  v-if="loginStatus === 'signedIn' && privateHooks && !privateHooks.length"
                >
                   You do not have any private hooks. <span
                      role="button"
@@ -74,19 +74,27 @@
                   >Create one</span>
                </div>
                <div
-                  v-for="hook of privateHooks"
-                  :key="hook.id"
+                  class="list-group-item list-group-item-secondary"
+                  v-if="loginStatus === 'signedIn' && !privateHooks"
                >
-                  <router-link
-                     v-for="h of privateHooks"
-                     :key="h.id"
-                     :to="{name: 'hook', params: { hookId: h.id}}"
-                     class="list-group-item list-group-item-action"
-                  >
-                     {{h.id}}
-                     <small class="text-muted ms-5">{{new Date(h.created).toLocaleString()}}</small>
-                  </router-link>
+                  <v-spinner></v-spinner>
                </div>
+               <template v-if="privateHooks">
+                  <div
+                     v-for="hook of privateHooks"
+                     :key="hook.id"
+                  >
+                     <router-link
+                        v-for="h of privateHooks"
+                        :key="h.id"
+                        :to="{name: 'hook', params: { hookId: h.id}}"
+                        class="list-group-item list-group-item-action"
+                     >
+                        {{h.id}}
+                        <small class="text-muted ms-5">{{new Date(h.created).toLocaleString()}}</small>
+                     </router-link>
+                  </div>
+               </template>
             </div>
          </div>
       </div>
@@ -122,13 +130,13 @@
 
          const hooks = [...hookStore.hooks].filter(h => !h.ownerId).sort((a, b) => b.created - a.created);
 
-         const privateHooks = ref<Hook[]>([]);
+         const privateHooks = ref<Hook[] | null>(null);
 
          watch(loginStatus, () => {
             if (loginStatus.value === 'signedIn') {
                apiClient.getHooks().then(h => privateHooks.value = [...h].sort((a, b) => b.created - a.created));
-            } else if (privateHooks.value.length) {
-               privateHooks.value = [];
+            } else if (privateHooks.value?.length) {
+               privateHooks.value = null;
             }
          }, { immediate: true });
 

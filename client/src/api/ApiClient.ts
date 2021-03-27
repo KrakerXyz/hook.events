@@ -64,11 +64,16 @@ export class ApiClient {
       });
    }
 
-   /** Updates properties of a hook */
+   /** Updates properties of a hook. Requires authorization */
    public async updateHook<T extends HookUpdate>(id: string, hook: Strict<HookUpdate, T>): Promise<Hook> {
       return this._axios.put<Hook>(`hooks/${id}`, hook).then(r => {
          return r.data;
       });
+   }
+
+   /** Deletes a hook. Requires authorization */
+   public async deleteHook(id: string): Promise<void> {
+      return this._axios.delete(`hooks/${id}`);
    }
 
    /** Get a list of events received by a given hook id */
