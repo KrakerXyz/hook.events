@@ -4,6 +4,7 @@ import { performance } from 'perf_hooks';
 import { createLogger } from '../logger';
 import mongoose from 'mongoose';
 import { deMongoose } from './deMongoose';
+import { deleteHookEvents } from './eventDataStore';
 
 const logger = createLogger('hookStore');
 logger.debug('Creating mongoose model');
@@ -50,7 +51,8 @@ export async function updateHook(hookId: string, hook: HookUpdate): Promise<void
 
 export async function deleteHook(hookId: string): Promise<void> {
    const startTime = performance.now();
+   await deleteHookEvents(hookId);
    await HookModel.deleteOne({ id: hookId });
-   logger.debug('Deleted hook {hookId} to db in {elapsed}ms', { hookId: hookId, elapsed: performance.now() - startTime });
+   logger.debug('Deleted hook {hookId} and all data from db in {elapsed}ms', { hookId: hookId, elapsed: performance.now() - startTime });
 
 }

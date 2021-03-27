@@ -72,7 +72,11 @@ export async function addEvent(event: EventData): Promise<void> {
 
    logger.debug('Inserted event {id} into table in {elapsed}ms', { id: event.id, elapsed: performance.now() - timeStart });
 
-   await bodyStoragePromise;
+   try {
+      await bodyStoragePromise;
+   } catch (e) {
+      logger.error('Failed to save body - {errorMessage}', { errorMessage: e.toString() });
+   }
 
 }
 
@@ -92,4 +96,16 @@ export async function deleteEvent(event: EventData): Promise<void> {
    await dbDelete;
 
    logger.debug('Completed event {eventId} deletion in {elapsed}ms', { eventId: event.id, elapsed: performance.now() - startTime });
+}
+
+export async function deleteHookEvents(hookId: string): Promise<void> {
+   const startTime = performance.now();
+
+   const events = await EventDataModel.find({ hookId }).exec();
+   const eventsWithBody = events.map(e => e.toObject() as EventData).filter(e => e.body);
+
+   await Promise.all(eventsWithBody.map(e => deleteBody(e.body!)));
+   await EventDataModel.deleteMany({ hookId });
+
+   logger.debug('Deleted hook {hookId} events from db in {elapsed}ms', { hookId: hookId, elapsed: performance.now() - startTime });
 }

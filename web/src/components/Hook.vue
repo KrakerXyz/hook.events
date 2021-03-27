@@ -108,6 +108,7 @@
             :hook="hook"
             @close="showConfig = false"
             @update="updateHook($event)"
+            @delete="hookDeleted()"
          ></hook-config>
       </v-modal>
 
@@ -250,7 +251,11 @@
             Object.assign(hookRef.value, dirtyHook);
          };
 
-         return { events, hookAddress, selectedEventId, selectedEvent, deleteEvent, isUnauthorized, isSignedIn, showConfig, hook: hookRef, updateHook };
+         const hookDeleted = () => {
+            router.replace({ name: 'home' });
+         };
+
+         return { events, hookAddress, selectedEventId, selectedEvent, deleteEvent, isUnauthorized, isSignedIn, showConfig, hook: hookRef, updateHook, hookDeleted };
       }
    });
 </script>

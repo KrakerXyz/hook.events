@@ -9,6 +9,7 @@
       "COSMOSDB",
       "Kraker",
       "globaldb",
-      "mongodb"
+      "mongodb",
+      "tcohm"
    ]
 }

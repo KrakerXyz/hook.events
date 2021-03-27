@@ -139,7 +139,7 @@ const del: RequestHandler = async (req: HeRequest, res): Promise<void> => {
 
    await deleteHook(hookId);
 
-   res.send(200).send();
+   res.sendStatus(200);
 
 };
 hookRouter.delete('/:hookId', del);

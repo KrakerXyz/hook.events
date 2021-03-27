@@ -60,7 +60,11 @@
             <div class="form-text text-danger">
                Delete the hook and all it's events. This is cannot be undone.
             </div>
-            <button class="btn btn-danger">DELETE</button>
+            <button
+               class="btn btn-danger"
+               @click="deleteHook()"
+               :disabled="formDisabled"
+            >DELETE</button>
          </div>
       </div>
 
@@ -101,6 +105,7 @@
       },
       emits: {
          update: (hook: Hook) => !!hook,
+         delete: () => true,
          close: () => true
       },
       setup(props, { emit }) {
@@ -136,7 +141,22 @@
             }
          };
 
-         return { dirtyHook, isDirty, deleteCheck, formDisabled, save };
+         const deleteHook = async () => {
+            try {
+               saveError.value = null;
+               formDisabled.value = true;
+               await apiClient.deleteHook(dirtyHook.id);
+               emit('delete');
+               emit('close');
+            } catch (e) {
+               console.error(e);
+               saveError.value = 'There was an error saving the hook';
+            } finally {
+               formDisabled.value = false;
+            }
+         };
+
+         return { dirtyHook, isDirty, deleteCheck, formDisabled, save, deleteHook };
       }
    });
 
