@@ -13,7 +13,16 @@
       },
       setup(props) {
 
-         const strBody = computed(() => atob(props.body));
+         const strBody = computed(() => {
+            const str = atob(props.body);
+            try {
+               const json = JSON.parse(str);
+               const formatted = JSON.stringify(json, null, 3);
+               return formatted;
+            } catch {
+               return str;
+            }
+         });
 
          return { strBody };
       }

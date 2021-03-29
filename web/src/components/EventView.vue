@@ -91,7 +91,6 @@
             loadBody();
          }, { immediate: true }); //we use immediate to call the loadBody
 
-
          const contentType = computed(() => {
             const contentTypeKey = Object.getOwnPropertyNames(props.event.headers).find(k => k.toLowerCase() === 'content-type');
             if (!contentTypeKey) { return null; }
