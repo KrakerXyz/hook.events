@@ -7,7 +7,7 @@
             @click="toggleBase64()"
          >{{(isBase64 ? 'Decode from' : 'Encode to')}} Base64</button>
          <button
-            class="btn btn-link p-0 ml-4"
+            class="btn btn-link p-0 ms-4"
             @click="download()"
          >Download as file</button>
       </teleport>

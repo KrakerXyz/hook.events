@@ -43,8 +43,12 @@ export async function getBody(fileNameFull: string): Promise<Buffer> {
 
 export async function deleteBody(fileNameFull: string): Promise<void> {
     const startTime = performance.now();
-    const blobClient = containerClient.getBlockBlobClient(fileNameFull);
-    await blobClient.delete();
+    try {
+        const blobClient = containerClient.getBlockBlobClient(fileNameFull);
+        await blobClient.delete();
+    } catch (e) {
+        logger.error('Failed to delete body from storage - {errorMessage}', { errorMessage: e.toString() });
+    }
     logger.debug('Deleted event body {fileNameFull} in {elapsed}ms', { fileNameFull, elapsed: performance.now() - startTime });
 }
 

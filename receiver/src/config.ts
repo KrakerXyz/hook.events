@@ -7,7 +7,10 @@ export const enum EnvKey {
    /** A connection string for hookseventstorage */
    AZURE_STORAGE_CONNECTION_STRING = 'AZURE_STORAGE_CONNECTION_STRING',
 
-   COSMOSDB_CONNECTION_STRING = 'COSMOSDB_CONNECTION_STRING'
+   COSMOSDB_CONNECTION_STRING = 'COSMOSDB_CONNECTION_STRING',
+
+   /** The google client id for OAuth verification */
+   GOOGLE_CLIENT_ID = 'GOOGLE_CLIENT_ID'
 }
 
 /** Gets value from process.env or throws exception if empty */

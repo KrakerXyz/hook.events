@@ -5,21 +5,26 @@
       <teleport to="#nav-portal">
          <!-- this rapper div is to keep the items together within nav's justify spacing -->
          <div class="d-flex align-items-center">
-            <span class="navbar-text text-monospace text-light d-none d-lg-inline">
+            <span class="navbar-text font-monospace text-light d-none d-lg-inline">
                {{hookAddress}}
             </span>
-            <span class="navbar-text text-monospace text-light d-lg-none">
+            <span class="navbar-text font-monospace text-light d-lg-none">
                {{hookId}}
             </span>
             <v-button-copy
                :text="hookAddress"
                class="text-light"
             ></v-button-copy>
+            <v-button-config
+               v-if="hook && hook.ownerId"
+               class="text-light"
+               @click="showConfig = true"
+            ></v-button-config>
          </div>
       </teleport>
 
       <div
-         v-if="!events"
+         v-if="!events && !isUnauthorized"
          class="h-100 d-flex align-items-center justify-content-center"
       >
          <v-spinner></v-spinner>
@@ -27,7 +32,7 @@
 
       <div
          class="container-fluid py-3 h-100"
-         v-else-if="events.length"
+         v-else-if="events && events.length"
       >
          <div class="row h-100 no-gutters">
             <div class="col-4 h-100">
@@ -55,7 +60,7 @@
                class="col-8 h-100"
             >
                <div class="h-100 d-flex flex-column">
-                  <h5 class="ml-5">Event Details</h5>
+                  <h5 class="ms-5">Event Details</h5>
                   <event-view
                      class="flex-grow-1 overflow-auto px-5"
                      :event="selectedEvent"
@@ -66,31 +71,71 @@
       </div>
 
       <hook-empty
-         v-else
+         v-else-if="!isUnauthorized"
          :hookId="hookId"
       ></hook-empty>
+
+      <div
+         class="container text-center"
+         v-if="isUnauthorized"
+      >
+
+         <div class="alert alert-danger mt-4">
+            <h2>Unauthorized</h2>
+         </div>
+
+         <div
+            class="mt-3"
+            v-if="!isSignedIn"
+         >
+            <h4>This hook requires that you be signed in</h4>
+         </div>
+
+         <div
+            class="mt-3"
+            v-if="isSignedIn"
+         >
+            You do not have access to this hook
+         </div>
+
+      </div>
+
+      <v-modal
+         v-if="hook && showConfig"
+         @close="showConfig = false"
+      >
+         <hook-config
+            :hook="hook"
+            @close="showConfig = false"
+            @update="updateHook($event)"
+            @delete="hookDeleted()"
+         ></hook-config>
+      </v-modal>
 
    </div>
 </template>
 
 <script lang="ts">
+   import { useApiToken, useLoginStatus } from '@/services/loginService';
    import { useApiClient } from '@/services/useApiClient';
-   import { useHookStore } from '@/services/useHookStore';
-   import { Client as ReceiverClient } from 'hook-events/receiver';
-   import type { EventDataSlim, Hook } from 'hook-events/types';
-   import { computed, defineComponent, onUnmounted, ref, watch } from 'vue';
+   import { useHookAddress } from '@/services/useHookAddress';
+   import type { EventDataSlim, Hook } from 'hook-events';
+   import { ReceiverClient } from 'hook-events';
+   import { computed, defineComponent, onUnmounted, reactive, ref, watch } from 'vue';
+   import { useRoute, useRouter } from 'vue-router';
    import type { EventDataVm } from './EventDataVm';
    import EventListItem from './EventListItem.vue';
-   import { useHookAddress } from '@/services/useHookAddress';
-   import HookEmpty from './HookEmpty.vue';
-   import { useRoute, useRouter } from 'vue-router';
    import EventView from './EventView.vue';
+   import HookEmpty from './HookEmpty.vue';
+   import HookConfig from './HookConfig.vue';
+   import { deepClone } from '@/services/deepClone';
 
    export default defineComponent({
       components: {
          EventListItem,
          HookEmpty,
-         EventView
+         EventView,
+         HookConfig
       },
       props: {
          hookId: { type: String, required: true }
@@ -102,15 +147,30 @@
 
          const hookAddress = useHookAddress(props.hookId);
 
-         const hookStore = useHookStore();
+         const hookRef = ref<Hook | null>(null);
+         const isUnauthorized = ref(false);
 
-         const hookRef = ref<Hook | null>(hookStore.hooks.find(h => h.id === props.hookId) ?? null);
+         const loginStatus = useLoginStatus();
+         const isSignedIn = computed(() => loginStatus.value === 'signedIn');
 
          const apiClient = useApiClient();
 
-         if (!hookRef.value) {
-            apiClient.getHook(props.hookId).then(h => hookRef.value = h);
-         }
+         watch(loginStatus, () => {
+
+            if (loginStatus.value === 'initializing') { return; }
+
+            apiClient
+               .getHook(props.hookId)
+               .then(h => {
+                  //We clone and make reactive because the update handler from the config modal does an Object.assign into it
+                  hookRef.value = reactive(deepClone(h));
+                  isUnauthorized.value = false;
+               })
+               .catch(e => {
+                  if (e.response?.status !== 403) { throw e; }
+                  isUnauthorized.value = true;
+               });
+         }, { immediate: true });
 
          let receiver: ReceiverClient | null = null;
 
@@ -120,6 +180,10 @@
          const startTime = Date.now();
          const minLoadTime = 500;
 
+         const apiToken = useApiToken();
+
+         const receiverClientId = 'https://hook.events';
+
          watch(hookRef, h => {
 
             if (!h) {
@@ -128,7 +192,10 @@
                return;
             }
 
-            receiver = new ReceiverClient(useHookAddress(props.hookId));
+            receiver = new ReceiverClient(useHookAddress(props.hookId), {
+               apiToken: () => apiToken.value,
+               clientId: receiverClientId
+            });
 
             receiver.onEvent(e => {
                //converting to a slim event to conserve memory
@@ -178,7 +245,17 @@
             receiver?.dispose();
          });
 
-         return { events, hookAddress, selectedEventId, selectedEvent, deleteEvent };
+         const showConfig = ref(false);
+
+         const updateHook = (dirtyHook: Hook) => {
+            Object.assign(hookRef.value, dirtyHook);
+         };
+
+         const hookDeleted = () => {
+            router.replace({ name: 'home' });
+         };
+
+         return { events, hookAddress, selectedEventId, selectedEvent, deleteEvent, isUnauthorized, isSignedIn, showConfig, hook: hookRef, updateHook, hookDeleted };
       }
    });
 </script>

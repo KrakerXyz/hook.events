@@ -15,10 +15,20 @@
             "src/*"
          ]
       },
+      "types": [
+         "node",
+         "gapi",
+         "gapi.auth2"
+      ],
       "lib": [
          "ES2019",
          "dom",
          "dom.iterable"
+      ],
+      "plugins": [
+         {
+            "name": "@vuedx/typescript-plugin-vue"
+         }
       ]
    }
 }

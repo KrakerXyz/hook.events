@@ -1,3 +1,3 @@
 
 export * from './EventData';
-export * from './Hook';
+export * from './Connection';

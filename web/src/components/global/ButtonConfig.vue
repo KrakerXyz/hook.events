@@ -2,9 +2,9 @@
 <template>
    <button
       type="button"
-      class="btn btn-link text-danger"
+      class="btn btn-link"
    >
-      <i class="fal fa-trash-alt"></i>
+      <i class="fal fa-cog"></i>
       <span
          v-if="!!this.$slots.default"
          class="ms-3"

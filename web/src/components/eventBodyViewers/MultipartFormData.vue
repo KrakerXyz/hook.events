@@ -47,7 +47,7 @@
                class="row mt-3"
                v-if="!part.meta.fileName"
             >
-               <div class="col text-monospace">
+               <div class="col font-monospace">
                   {{part.data}}
                </div>
             </div>

@@ -1,4 +1,4 @@
-import { Hook } from 'hook-events/types';
+import type { Hook } from 'hook-events';
 
 export function useHookStore() {
 

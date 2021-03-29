@@ -2,7 +2,7 @@
 <template>
    <div class="h-100 container-fluid">
       <div class="row mt-3">
-         <div class="col text-monospace">
+         <div class="col font-monospace">
             <h1>
                <method-badge :method="event.method"></method-badge> {{event.path}}{{queryString}}
             </h1>
@@ -60,7 +60,7 @@
 <script lang="ts">
 
    import { useApiClient } from '@/services/useApiClient';
-   import { EventDataSlim } from 'hook-events/types';
+   import type { EventDataSlim } from 'hook-events';
    import { computed, defineComponent, ref, watch } from 'vue';
    import * as BodyViewers from './eventBodyViewers';
    import MethodBadge from './MethodBadge.vue';
@@ -95,7 +95,10 @@
          const contentType = computed(() => {
             const contentTypeKey = Object.getOwnPropertyNames(props.event.headers).find(k => k.toLowerCase() === 'content-type');
             if (!contentTypeKey) { return null; }
-            return props.event.headers[contentTypeKey][0] ?? null;
+            const contentTypeValue = props.event.headers[contentTypeKey];
+            if (!contentTypeValue) { return null; }
+            if (Array.isArray(contentTypeValue)) { return contentTypeValue[0] ?? null; }
+            return contentTypeValue;
          });
 
          const queryString = computed(() => {
@@ -124,11 +127,13 @@
 
             if (!contentType.value) { return BodyViewers.Default; }
 
-            if (contentType.value.toLowerCase().startsWith('multipart/form-data')) { return BodyViewers.MultipartFormData; }
+            const lowerContentType = contentType.value.toLowerCase();
 
-            if (contentType.value === 'application/json') { return BodyViewers.JsonBody; }
+            if (lowerContentType.match(/multipart.form-data/)) { return BodyViewers.MultipartFormData; }
 
-            if (contentType.value === 'application/x-www-form-urlencoded') { return BodyViewers.FormUrlEncoded; }
+            if (lowerContentType.match(/application.json/)) { return BodyViewers.JsonBody; }
+
+            if (lowerContentType.match(/application.x-www-form-urlencoded/)) { return BodyViewers.FormUrlEncoded; }
 
             return BodyViewers.Default;
 

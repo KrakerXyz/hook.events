@@ -1,8 +1,8 @@
-import type { EventData } from '../types/EventData';
-import { Client as ReceiverClient } from './Client';
+import type { EventData } from './types/EventData';
+import { ReceiverClient } from './ReceiverClient';
 
 /** Options for the waitForEvent function */
-interface WaitForEventOptions {
+export interface WaitForEventOptions {
 
    /** Time to wait, in milliseconds, for an event before an exception is thrown. Defaults to 30 seconds. */
    timeout: number;
@@ -14,7 +14,7 @@ interface WaitForEventOptions {
  * @param hookUrlOrClient - The url for your hook. Normally in the form of https://[hookId].hook.events
  * @param options Options for the wait
  */
-function waitForEvent(hookUrlOrClient: string | ReceiverClient, options?: Partial<WaitForEventOptions>): Promise<EventData> {
+export function waitForEvent(hookUrlOrClient: string | ReceiverClient, options?: Partial<WaitForEventOptions>): Promise<EventData> {
 
    if (options?.timeout !== undefined && options.timeout < 1) { throw new Error('When given, options.timeout must be greater-than one (1)'); }
 
@@ -42,5 +42,3 @@ function waitForEvent(hookUrlOrClient: string | ReceiverClient, options?: Partia
 
    });
 }
-
-export { EventData, waitForEvent, WaitForEventOptions };

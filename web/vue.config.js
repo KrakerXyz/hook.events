@@ -1,3 +1,4 @@
+// @ts-nocheck
 
 module.exports = {
    configureWebpack: config => {
@@ -37,7 +38,7 @@ module.exports = {
                if (!lang || ['text', 'literal', 'nohighlight'].includes(lang)) {
                   return `<pre class="hljs rounded p-3">${code}</pre>`;
                }
-               const html = highlight.highlight(lang, code).value;
+               const html = highlight.highlight(code, { language: lang }).value;
                return `<span class="hljs rounded p-3">${html}</span>`;
                /* cSpell:enable */
             };

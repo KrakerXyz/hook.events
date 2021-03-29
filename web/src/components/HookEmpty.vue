@@ -1,8 +1,8 @@
 
 <template>
    <div class="container text-center">
-      <h3 class="alert alert-primary text-monospace mt-5 mb-4 text-truncate">{{hookUrl}}</h3>
-      <p class="mb-4">Hook ID <span class="text-monospace">{{hookId}}</span> has been created but no requests have been received.</p>
+      <h3 class="alert alert-primary font-monospace mt-5 mb-4 text-truncate">{{hookUrl}}</h3>
+      <p class="mb-4">Hook ID <span class="font-monospace">{{hookId}}</span> has been created but no requests have been received.</p>
       <small>If you're excited to see what a incoming request looks like,
          <a
             :href="hookUrl"

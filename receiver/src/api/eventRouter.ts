@@ -2,18 +2,36 @@ import { getBody } from '@/services/persistence/bodyStorageService';
 import { getEvent } from '@/services/persistence/eventDataStore';
 import { RequestHandler, Router } from 'express';
 import { deleteEvent as persistanceDeleteEvent } from '@/services/persistence/eventDataStore';
+import { HeRequest } from './HeRequest';
+import { getHook } from '@/services/persistence/hookStore';
+import { createLogger } from '@/services/logger';
 
+const log = createLogger('eventRouter');
 
-const getEventBody: RequestHandler = async (req, res) => {
+const getEventBody: RequestHandler = async (req: HeRequest, res) => {
    const eventId = req.params['eventId'];
    if (!eventId) {
-      res.status(400).send('eventId not found');
+      res.status(400).send('eventId missing');
       return;
    }
 
    const event = await getEvent(eventId);
    if (!event) {
       res.status(404).send('eventId does not exist');
+      return;
+   }
+
+   const hook = await getHook(event.hookId);
+
+   if (!hook) {
+      res.status(500).send('Missing hook for event');
+      log.error('Hook {hookId} for event {eventId} not found', { hookId: event.hookId, eventId });
+      return;
+   }
+
+   if (hook.ownerId && hook.ownerId !== req.user?.id) {
+      res.status(403).send('Accedd denied to private hook');
+      log.warn('Access to event {eventId} body denied (403) to user {userId}', { eventId, userId: req.user?.id ?? 'anon' });
       return;
    }
 
@@ -28,7 +46,7 @@ const getEventBody: RequestHandler = async (req, res) => {
 
 };
 
-const deleteEvent: RequestHandler = async (req, res) => {
+const deleteEvent: RequestHandler = async (req: HeRequest, res) => {
    const eventId = req.params['eventId'];
    if (!eventId) {
       res.status(400).send('eventId not found');
@@ -38,6 +56,20 @@ const deleteEvent: RequestHandler = async (req, res) => {
    const event = await getEvent(eventId);
    if (!event) {
       res.status(404).send('eventId does not exist');
+      return;
+   }
+
+   const hook = await getHook(event.hookId);
+
+   if (!hook) {
+      res.status(500).send('Missing hook for event');
+      log.error('Hook {hookId} for event {eventId} not found', { hookId: event.hookId, eventId });
+      return;
+   }
+
+   if (hook.ownerId && hook.ownerId !== req.user?.id) {
+      res.status(403).send('Accedd denied to private hook');
+      log.warn('Access to event {eventId} body denied (403) to user {userId}', { eventId, userId: req.user?.id ?? 'anon' });
       return;
    }
 

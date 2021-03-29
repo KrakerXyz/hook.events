@@ -1,12 +1,32 @@
 
+import { createLogger } from '@/services/logger';
 import { newHookId } from '@/services/newHookId';
 import { getEventsForHook } from '@/services/persistence/eventDataStore';
-import { addHook, getHook } from '@/services/persistence/hookStore';
+import { addHook, deleteHook, getHook, getHooks, updateHook } from '@/services/persistence/hookStore';
 import { json, RequestHandler } from 'express';
 import { Router } from 'express';
-import { Hook } from 'hook-events';
+import { Hook, HookUpdate } from 'hook-events';
+import { HeRequest } from './HeRequest';
 
-const getById: RequestHandler = async (req, res) => {
+const hookRouter = Router();
+
+const log = createLogger('hookRouter');
+
+const get: RequestHandler = async (req: HeRequest, res): Promise<void> => {
+
+   if (!req.user) {
+      res.status(400).send('Authentication required to list hooks');
+      return;
+   }
+
+   const hooks = await getHooks(req.user.id);
+
+   res.status(200).send(hooks);
+
+};
+hookRouter.get('/', get);
+
+const getById: RequestHandler = async (req: HeRequest, res): Promise<void> => {
    const hookId = req.params['hookId'];
    if (!hookId) {
       res.status(404).send('hookId not found');
@@ -19,26 +39,127 @@ const getById: RequestHandler = async (req, res) => {
       return;
    }
 
+   if (hook.ownerId && hook.ownerId !== req.user?.id) {
+      res.status(403).send('Accedd denied to private hook');
+      log.warn('Access to hook {hookId} denied (403) to user {userId}', { hookId, userId: req.user?.id ?? 'anon' });
+      return;
+   }
+
    res.status(200).send(hook);
 };
+hookRouter.get('/:hookId', getById);
 
-const post: RequestHandler = async (req, res) => {
+const post: RequestHandler = async (req: HeRequest, res): Promise<void> => {
 
    const hook: Hook = {
       id: newHookId(),
       description: '',
-      created: Date.now()
+      created: Date.now(),
+      ownerId: req.user?.id ?? null
    };
 
    await addHook(hook);
 
+
    res.send(hook);
 };
+hookRouter.post('/', json(), post);
 
-const getEvents: RequestHandler = async (req, res) => {
+const put: RequestHandler = async (req: HeRequest, res): Promise<void> => {
+
+   if (!req.user) {
+      res.status(400).send('Authorization is required to perform hook updates');
+      return;
+   }
+
    const hookId = req.params['hookId'];
    if (!hookId) {
       res.status(400).send('hookId not found');
+      return;
+   }
+
+   const hook = await getHook(hookId);
+   if (!hook) {
+      res.status(404).send('Hook does not exist');
+      return;
+   }
+
+   if (!hook.ownerId) {
+      res.send(400).send('Only private hooks can be updated');
+      return;
+   }
+
+   if (hook.ownerId !== req.user?.id) {
+      res.status(403).send('Access denied to private hook');
+      log.warn('Access to hook {hookId} events denied (403) to user {userId}', { hookId, userId: req.user?.id ?? 'anon' });
+      return;
+   }
+
+   const hookUpdate: HookUpdate = req.body;
+   const hookUpdateClean: HookUpdate = { description: hookUpdate.description, name: hookUpdate.name };
+
+   await updateHook(hookId, hookUpdateClean);
+
+   const newHook = { ...hook, ...hookUpdateClean };
+
+   res.status(200).send(newHook);
+
+};
+hookRouter.put('/:hookId', json(), put);
+
+const del: RequestHandler = async (req: HeRequest, res): Promise<void> => {
+
+   if (!req.user) {
+      res.status(400).send('Authorization is required to perform hook updates');
+      return;
+   }
+
+   const hookId = req.params['hookId'];
+   if (!hookId) {
+      res.status(400).send('hookId not found');
+      return;
+   }
+
+   const hook = await getHook(hookId);
+   if (!hook) {
+      res.status(404).send('Hook does not exist');
+      return;
+   }
+
+   if (!hook.ownerId) {
+      res.send(400).send('Only private hooks can be updated');
+      return;
+   }
+
+   if (hook.ownerId !== req.user?.id) {
+      res.status(403).send('Access denied to private hook');
+      log.warn('Access to hook {hookId} events denied (403) to user {userId}', { hookId, userId: req.user?.id ?? 'anon' });
+      return;
+   }
+
+   await deleteHook(hookId);
+
+   res.sendStatus(200);
+
+};
+hookRouter.delete('/:hookId', del);
+
+const getEvents: RequestHandler = async (req: HeRequest, res): Promise<void> => {
+   const hookId = req.params['hookId'];
+   if (!hookId) {
+      res.status(400).send('hookId not found');
+      return;
+   }
+
+   const hook = await getHook(hookId);
+   if (!hook) {
+      res.status(404).send('Hook does not exist');
+      return;
+   }
+
+   if (hook.ownerId && hook.ownerId !== req.user?.id) {
+      res.status(403).send('Access denied to private hook');
+      log.warn('Access to hook {hookId} events denied (403) to user {userId}', { hookId, userId: req.user?.id ?? 'anon' });
       return;
    }
 
@@ -47,11 +168,6 @@ const getEvents: RequestHandler = async (req, res) => {
    res.status(200).send(events);
 
 };
-
-const hookRouter = Router();
-
-hookRouter.post('/', json(), post);
-hookRouter.get('/:hookId', getById);
 hookRouter.get('/:hookId/events', getEvents);
 
 export default hookRouter;
