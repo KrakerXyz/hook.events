@@ -12,9 +12,9 @@ import { addEvent } from './services/persistence/eventDataStore';
 import { v4 } from 'uuid';
 import rootRouter from './api/rootRouter';
 import { getHook } from './services/persistence/hookStore';
-import mongoose from 'mongoose';
 import { performance } from 'perf_hooks';
 import path from 'path';
+import { configureDb } from '@krakerxyz/typed-base';
 
 const logger = createLogger('index');
 logger.info('Application starting up. ENV = {env}, NODE_ENV = {nodeEnv}', { env: getRequiredConfig(EnvKey.ENV), nodeEnv: process.env['NODE_ENV'] });
@@ -194,12 +194,7 @@ server.listen(port, () => {
    logger.info(`server started on http://localhost:${port}`);
 });
 
-logger.info('Starting mongoose connection');
-
-mongoose.connect(getRequiredConfig(EnvKey.COSMOSDB_CONNECTION_STRING),
-   {
-      dbName: 'hook-events',
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useFindAndModify: false,
-   }).then(() => console.log('Mongoose connection successfull'));
+configureDb({
+   dbName: 'hook-events-dev',
+   uri: getRequiredConfig(EnvKey.COSMOSDB_CONNECTION_STRING)
+});

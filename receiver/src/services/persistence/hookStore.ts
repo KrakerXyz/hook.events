@@ -1,50 +1,42 @@
 
-import { Hook, HookUpdate } from 'hook-events';
+import { Hook } from 'hook-events';
 import { performance } from 'perf_hooks';
 import { createLogger } from '../logger';
-import mongoose from 'mongoose';
-import { deMongoose } from './deMongoose';
 import { deleteHookEvents } from './eventDataStore';
+import { TypedEntity } from '@krakerxyz/typed-base';
+import { awaitAll } from './awaitAll';
 
 const logger = createLogger('hookStore');
 logger.debug('Creating mongoose model');
 
-const HookModel = mongoose.model('hook', new mongoose.Schema({
-   id: String,
-   created: Number,
-   description: String,
-   name: String,
-   ownerId: String
-}));
+const hookBase = new TypedEntity<Hook>();
 
 export async function getHooks(ownerId: string): Promise<Hook[]> {
    const startTime = performance.now();
-   const hooks = await HookModel.find({ ownerId }).exec();
-   logger.debug('Got {count} hooks for owner {ownerId} from db in {elapsed}ms', { count: hooks.length, ownerId, elapsed: performance.now() - startTime });
-   return deMongoose<Hook>(hooks);
+   const hooks = await hookBase.findAsync({ ownerId });
+   const arr = await awaitAll(hooks);
+   logger.debug('Got {count} hooks for owner {ownerId} from db in {elapsed}ms', { count: arr.length, ownerId, elapsed: performance.now() - startTime });
+   return arr;
 }
 
 export async function getHook(hookId: string): Promise<Hook | null> {
    const startTime = performance.now();
-   const hook = await HookModel.findOne({ id: hookId }).exec();
+   const hook = await hookBase.findOneAsync({ id: hookId });
    logger.debug('Got hook {hookId} from db in {elapsed}ms', { hookId, elapsed: performance.now() - startTime });
-   return deMongoose<Hook>(hook);
+   return hook;
 }
 
 export async function addHook(hook: Hook): Promise<void> {
 
-   const hookModel = new HookModel(hook);
-
    const startTime = performance.now();
-   await hookModel.save();
+   await hookBase.insertAsync(hook);
    logger.debug('Saved hook {hookId} to db in {elapsed}ms', { hookId: hook.id, elapsed: performance.now() - startTime });
 
 }
 
-export async function updateHook(hookId: string, hook: HookUpdate): Promise<void> {
-
+export async function updateHook(hookId: string, hook: Hook): Promise<void> {
    const startTime = performance.now();
-   await HookModel.findOneAndUpdate({ id: hookId }, hook);
+   await hookBase.replaceOneAsync(hook);
    logger.debug('Updated hook {hookId} to db in {elapsed}ms', { hookId: hookId, elapsed: performance.now() - startTime });
 
 }
@@ -52,7 +44,7 @@ export async function updateHook(hookId: string, hook: HookUpdate): Promise<void
 export async function deleteHook(hookId: string): Promise<void> {
    const startTime = performance.now();
    await deleteHookEvents(hookId);
-   await HookModel.deleteOne({ id: hookId });
+   await hookBase.deleteOneAsync(hookId);
    logger.debug('Deleted hook {hookId} and all data from db in {elapsed}ms', { hookId: hookId, elapsed: performance.now() - startTime });
 
 }
