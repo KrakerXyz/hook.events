@@ -195,6 +195,6 @@ server.listen(port, () => {
 });
 
 configureDb({
-   dbName: 'hook-events-dev',
+   dbName: 'hook-events',
    uri: getRequiredConfig(EnvKey.COSMOSDB_CONNECTION_STRING)
 });

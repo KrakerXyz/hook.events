@@ -9,7 +9,7 @@
 <script lang="ts">
 
    import { computed, defineComponent, onMounted, ref } from 'vue';
-   import { CodeMirrorLanguage, useCodeMirrorAsync } from '../../services/useCodeMirror';
+   import { CodeMirrorLanguage, useCodeMirrorAsync } from '@/services/useCodeMirror';
 
    export default defineComponent({
       props: {
