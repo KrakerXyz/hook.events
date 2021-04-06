@@ -63,7 +63,7 @@ app.all('/*', async (req, res) => {
       staticHandler(req, res, () => {
 
          //Two years is suggested
-         res.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+         res.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
 
          // eslint-disable-next-line quotes
          res.header('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://kit.fontawesome.com https://kit-pro.fontawesome.com https://www.clarity.ms https://apis.google.com https://cdnjs.cloudflare.com; object-src 'none'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com  https://cdnjs.cloudflare.com; img-src 'self' https://*.googleusercontent.com data:; media-src 'none'; frame-src https://accounts.google.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://kit-pro.fontawesome.com https://ka-p.fontawesome.com https://www.clarity.ms");
