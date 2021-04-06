@@ -1,41 +1,26 @@
 
 
+import { TypedEntity } from '@krakerxyz/typed-base';
 import { EventData, EventDataSlim } from 'hook-events';
 import { performance } from 'perf_hooks';
 import { createLogger } from '../logger';
+import { awaitAll } from './awaitAll';
 import { deleteBody, storeBody } from './bodyStorageService';
-import mongoose from 'mongoose';
-import { deMongoose } from './deMongoose';
 
 const logger = createLogger('eventDataStore');
 
 logger.debug('Creating mongoose model');
 
-const EventDataModel = mongoose.model('event-data', new mongoose.Schema({
-   id: String,
-   created: Number,
-   hookId: String,
-   method: String,
-   path: String,
-   ip: String,
-   query: Object,
-   headers: Object,
-   body: String,
-   bodyError: new mongoose.Schema({
-      errorCode: String,
-      contentLength: Number,
-      maxLength: Number
-   })
-}));
+const eventDataBase = new TypedEntity<EventData>();
 
 export async function getEventsForHook(hookId: string): Promise<EventDataSlim[]> {
    const startTime = performance.now();
 
-   const events = await EventDataModel.find({ hookId }).sort({ created: -1 }).exec();
+   const events = await eventDataBase.findAsync({ hookId });
+   const arr = await awaitAll(events);
+   logger.debug('Got {length} events for hook {hookId} from db in {elapsed}ms', { length: arr.length, hookId, elapsed: performance.now() - startTime });
 
-   logger.debug('Got {length} events for hook {hookId} from db in {elapsed}ms', { length: events.length, hookId, elapsed: performance.now() - startTime });
-
-   return deMongoose<EventData>(events).map(e => {
+   return arr.sort(i => i.created - Date.now()).map(e => {
       const { body, ...slim } = e;
       return { ...slim, hasBody: !!body };
    });
@@ -44,9 +29,9 @@ export async function getEventsForHook(hookId: string): Promise<EventDataSlim[]>
 
 export async function getEvent(eventId: string): Promise<EventData | null> {
    const startTime = performance.now();
-   const item = await EventDataModel.findOne({ id: eventId }).exec();
+   const item = await eventDataBase.findOneAsync({ id: eventId });
    logger.debug('Got event {eventId} from db in {elapsed}ms', { eventId, elapsed: performance.now() - startTime });
-   return deMongoose<EventData>(item);
+   return item;
 }
 
 export async function addEvent(event: EventData): Promise<void> {
@@ -61,14 +46,14 @@ export async function addEvent(event: EventData): Promise<void> {
       body = bodyResult.fileName;
    }
 
-   const eventModel = new EventDataModel({
+   const eventModel: EventData = {
       ...event,
       body
-   });
+   };
 
    logger.debug('Inserting event {id} into table', { id: event.id });
    const timeStart = performance.now();
-   await eventModel.save();
+   await eventDataBase.insertAsync(eventModel);
 
    logger.debug('Inserted event {id} into table in {elapsed}ms', { id: event.id, elapsed: performance.now() - timeStart });
 
@@ -86,7 +71,7 @@ export async function deleteEvent(event: EventData): Promise<void> {
 
    const startTime = performance.now();
 
-   const dbDelete = EventDataModel.deleteOne({ id: event.id }).exec();
+   const dbDelete = eventDataBase.deleteOneAsync(event.id);
 
    if (event.body) {
       logger.debug('Deleting event {eventId} body', { eventId: event.id });
@@ -101,11 +86,12 @@ export async function deleteEvent(event: EventData): Promise<void> {
 export async function deleteHookEvents(hookId: string): Promise<void> {
    const startTime = performance.now();
 
-   const events = await EventDataModel.find({ hookId }).exec();
-   const eventsWithBody = events.map(e => e.toObject() as EventData).filter(e => e.body);
+   const iter = await eventDataBase.findAsync({ hookId });
+   const events = await awaitAll(iter);
+   const eventsWithBody = events.filter(e => e.body);
 
    await Promise.all(eventsWithBody.map(e => deleteBody(e.body!)));
-   await EventDataModel.deleteMany({ hookId });
+   await eventDataBase.deleteAsync({ hookId });
 
    logger.debug('Deleted hook {hookId} events from db in {elapsed}ms', { hookId: hookId, elapsed: performance.now() - startTime });
 }

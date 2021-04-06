@@ -98,7 +98,7 @@ const put: RequestHandler = async (req: HeRequest, res): Promise<void> => {
    const hookUpdate: HookUpdate = req.body;
    const hookUpdateClean: HookUpdate = { description: hookUpdate.description, name: hookUpdate.name };
 
-   await updateHook(hookId, hookUpdateClean);
+   await updateHook(hookId, { ...hook, ...hookUpdateClean });
 
    const newHook = { ...hook, ...hookUpdateClean };
 

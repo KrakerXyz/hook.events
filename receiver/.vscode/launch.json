@@ -16,7 +16,7 @@
             "--unhandled-rejections=strict",
             "--require=dotenv/config"
          ],
-         "preLaunchTask": "tsc: build - tsconfig.json",
+         "preLaunchTask": "npm: build",
          "outFiles": [
             "${workspaceFolder}/dist/**/*.js"
          ],
