@@ -13,7 +13,7 @@ const hookBase = new TypedEntity<Hook>();
 
 export async function getHooks(ownerId: string): Promise<Hook[]> {
    const startTime = performance.now();
-   const hooks = await hookBase.findAsync({ ownerId });
+   const hooks = hookBase.find({ ownerId });
    const arr = await awaitAll(hooks);
    logger.debug('Got {count} hooks for owner {ownerId} from db in {elapsed}ms', { count: arr.length, ownerId, elapsed: performance.now() - startTime });
    return arr;

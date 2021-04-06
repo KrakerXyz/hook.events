@@ -1,6 +1,10 @@
 
 <template>
-   <pre><code>{{strBody}}</code></pre>
+   <v-code-mirror-editor
+      :modelValue="strBody"
+      readonly="true"
+      language="json"
+   ></v-code-mirror-editor>
 </template>
 
 <script lang="ts">
@@ -13,7 +17,16 @@
       },
       setup(props) {
 
-         const strBody = computed(() => atob(props.body));
+         const strBody = computed(() => {
+            const str = atob(props.body);
+            try {
+               const json = JSON.parse(str);
+               const formatted = JSON.stringify(json, null, 3);
+               return formatted;
+            } catch {
+               return str;
+            }
+         });
 
          return { strBody };
       }

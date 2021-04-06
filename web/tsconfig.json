@@ -10,6 +10,9 @@
       "strict": true,
       "noImplicitReturns": true,
       "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "importHelpers": true,
+      "removeComments": true,
       "paths": {
          "@/*": [
             "src/*"
@@ -18,7 +21,8 @@
       "types": [
          "node",
          "gapi",
-         "gapi.auth2"
+         "gapi.auth2",
+         "codemirror"
       ],
       "lib": [
          "ES2019",
