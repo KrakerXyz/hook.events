@@ -4,7 +4,8 @@ import { loadCodeMirrorAsync } from './loadScript';
 export enum CodeMirrorLanguage {
    Javascript = 'javascript',
    Json = 'json',
-   Html = 'xml'
+   Html = 'xml',
+   Text = 'text'
 }
 
 export async function useCodeMirrorAsync(target: string | HTMLElement, readonly: Ref<boolean> | boolean = false, value: Ref<string> | string, language: CodeMirrorLanguage = CodeMirrorLanguage.Javascript): Promise<CodeMirror.Editor> {
@@ -28,10 +29,10 @@ export async function useCodeMirrorAsync(target: string | HTMLElement, readonly:
    if (language === CodeMirrorLanguage.Json) {
       languageOptions.mode.name = CodeMirrorLanguage.Javascript;
       languageOptions.mode.json = true;
-   }
-
-   if (language === CodeMirrorLanguage.Html) {
+   } else if (language === CodeMirrorLanguage.Html) {
       languageOptions.mode.htmlMode = true;
+   } else if (language === CodeMirrorLanguage.Text) {
+      languageOptions.mode = null;
    }
 
    editor = (window as any).CodeMirror(target, {

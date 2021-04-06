@@ -5,14 +5,14 @@
          <button
             class="btn btn-link p-0"
             @click="toggleView"
-         >Show {{(view === 'raw'?'Parsed':'Raw (slow)')}}</button>
+         >Show {{(view === 'raw'?'Parsed':'Raw')}}</button>
       </teleport>
-      <textarea
+      <v-code-mirror-editor
          v-if="view === 'raw'"
-         :value="rawBody"
-         class="form-control"
-         rows="15"
-      ></textarea>
+         :modelValue="rawBody"
+         readonly='true'
+         language="text"
+      ></v-code-mirror-editor>
       <div
          v-if="view === 'parsed' && parsedBody"
          class="list-group"
@@ -87,7 +87,7 @@
             let boundary = (props.contentType?.match(/boundary=(.+)\b/) ?? [])[1];
             if (!boundary) { return null; }
 
-            const decodedBody = atob(props.body);
+            const decodedBody = rawBody.value;
 
             //...are delimited with aboundary delimiter, constructed using CRLF, "--", and the value of the "boundary" parameter
             //I tried putting te \r\n in here alongside the -- but then the first part is missing because it does not start with \r\n

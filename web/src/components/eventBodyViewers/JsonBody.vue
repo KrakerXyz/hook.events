@@ -1,23 +1,21 @@
 
 <template>
-   <div
-      class="h-100"
-      ref="el"
-   ></div>
+   <v-code-mirror-editor
+      :modelValue="strBody"
+      readonly="true"
+      language="json"
+   ></v-code-mirror-editor>
 </template>
 
 <script lang="ts">
 
-   import { computed, defineComponent, onMounted, ref } from 'vue';
-   import { CodeMirrorLanguage, useCodeMirrorAsync } from '@/services/useCodeMirror';
+   import { computed, defineComponent } from 'vue';
 
    export default defineComponent({
       props: {
          body: { type: String, required: true }
       },
       setup(props) {
-
-         const el = ref<HTMLElement | null>(null);
 
          const strBody = computed(() => {
             const str = atob(props.body);
@@ -30,12 +28,7 @@
             }
          });
 
-         onMounted(() => {
-            console.assert(!!el.value);
-            useCodeMirrorAsync(el.value!, true, strBody, CodeMirrorLanguage.Json);
-         });
-
-         return { el };
+         return { strBody };
       }
    });
 

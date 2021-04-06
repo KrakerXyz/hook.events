@@ -4,7 +4,6 @@
       ".vscode{,/**}"
    ],
    "appService.deploySubpath": ".",
-   "appService.defaultWebAppToDeploy": "/subscriptions/4caab4ba-2a04-4ea1-9865-197f93cb3220/resourceGroups/hook-events-rg/providers/Microsoft.Web/sites/hook-events-app",
    "cSpell.words": [
       "COSMOSDB",
       "Kraker",
@@ -14,5 +13,6 @@
       "tcohm",
       "ttsc",
       "ttypescript"
-   ]
+   ],
+   "appService.defaultWebAppToDeploy": "/subscriptions/4caab4ba-2a04-4ea1-9865-197f93cb3220/resourceGroups/hook-events-rg/providers/Microsoft.Web/sites/hook-events-app"
 }
