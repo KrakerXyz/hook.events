@@ -16,7 +16,7 @@ const eventDataBase = new TypedEntity<EventData>();
 export async function getEventsForHook(hookId: string): Promise<EventDataSlim[]> {
    const startTime = performance.now();
 
-   const events = await eventDataBase.findAsync({ hookId });
+   const events = eventDataBase.find({ hookId });
    const arr = await awaitAll(events);
    logger.debug('Got {length} events for hook {hookId} from db in {elapsed}ms', { length: arr.length, hookId, elapsed: performance.now() - startTime });
 
@@ -86,7 +86,7 @@ export async function deleteEvent(event: EventData): Promise<void> {
 export async function deleteHookEvents(hookId: string): Promise<void> {
    const startTime = performance.now();
 
-   const iter = await eventDataBase.findAsync({ hookId });
+   const iter = eventDataBase.find({ hookId });
    const events = await awaitAll(iter);
    const eventsWithBody = events.filter(e => e.body);
 
